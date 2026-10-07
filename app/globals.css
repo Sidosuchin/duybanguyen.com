@@ -1,0 +1,87 @@
+@import "tailwindcss";
+
+@theme {
+  /* Brand palette — Phase 1 design system (D2: Terracotta accent) */
+  --color-paper: #faf6f0; /* warm white background */
+  --color-cream: #f1eadd; /* slightly deeper warm surface */
+  --color-charcoal: #211d1a; /* primary text */
+  --color-terracotta: #bc5633; /* accent */
+  --color-terracotta-deep: #9c4426; /* accent hover */
+  --color-sage: #6b7a67; /* secondary accent, sparing use */
+  --color-muted: #6f6a64; /* secondary text */
+  --color-line: #e6ddd0; /* subtle 1px borders */
+
+  --font-display: "Plus Jakarta Sans", "Inter", ui-sans-serif, system-ui,
+    sans-serif;
+  --font-body: "Inter", ui-sans-serif, system-ui, sans-serif;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--color-paper);
+  color: var(--color-charcoal);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: var(--color-terracotta);
+  color: #fff;
+}
+
+/* Visible, consistent keyboard focus */
+:where(a, button, input, [tabindex]):focus-visible {
+  outline: 2px solid var(--color-terracotta);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+/* Scroll reveal — subtle fade + slide up only */
+.reveal {
+  opacity: 0;
+  transform: translateY(18px);
+  transition:
+    opacity 0.7s ease,
+    transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, transform;
+}
+
+.reveal-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Animated underline for editorial links */
+.link-underline {
+  background-image: linear-gradient(currentColor, currentColor);
+  background-size: 0% 1px;
+  background-repeat: no-repeat;
+  background-position: left 100%;
+  transition: background-size 0.3s ease;
+}
+
+.link-underline:hover {
+  background-size: 100% 1px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
