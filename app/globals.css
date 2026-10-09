@@ -164,49 +164,11 @@ html[data-welcome="locked"] body {
 }
 
 /*
- * Welcome screen intro — the orange cat makes one gentle revolution
- * around a thin ring, then settles at the top of the ring while the
- * panel fades in beneath it. Pure CSS: a rotating wrapper carries the
- * cat around the circle, a counter-rotating holder with the exact same
- * duration and timing function keeps the cat upright at every instant
- * (the two rotations cancel precisely), and an innermost layer adds a
- * small lean sway so the cat seems to lean into the motion. The whole
- * sequence is decorative and finishes in under two seconds; it never
- * blocks interaction.
+ * Welcome screen entrance motion. The intro itself is a short muted
+ * video (the cat orbiting a hand-drawn globe) played once over its
+ * poster still; its state machine lives in WelcomeGate.tsx. The CSS
+ * here only carries the panel/screen entrances below.
  */
-@keyframes gate-orbit-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@keyframes gate-orbit-counter {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(-360deg);
-  }
-}
-
-@keyframes gate-orbit-lean {
-  0%,
-  100% {
-    transform: rotate(0deg);
-  }
-  30% {
-    transform: rotate(7deg);
-  }
-  55% {
-    transform: rotate(0deg);
-  }
-  80% {
-    transform: rotate(-5deg);
-  }
-}
 
 @keyframes gate-panel-in {
   from {
@@ -230,21 +192,10 @@ html[data-welcome="locked"] body {
   }
 }
 
-.orbit-rotor {
-  animation: gate-orbit-spin 1.9s cubic-bezier(0.2, 0.65, 0.25, 1) both;
-}
-
-.orbit-counter {
-  animation: gate-orbit-counter 1.9s cubic-bezier(0.2, 0.65, 0.25, 1) both;
-}
-
-.orbit-lean {
-  animation: gate-orbit-lean 1.9s ease-in-out both;
-}
-
-/* The panel lands just as the cat completes its revolution. */
+/* The panel fades in once the intro settles (video end, skip, or the
+   safety fallback); it is only rendered from that moment on. */
 .gate-panel-in {
-  animation: gate-panel-in 0.7s cubic-bezier(0.22, 1, 0.36, 1) 1.05s both;
+  animation: gate-panel-in 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.15s both;
 }
 
 /* Screen changes inside the gate (welcome → game → done). */
@@ -252,21 +203,10 @@ html[data-welcome="locked"] body {
   animation: gate-screen-in 0.45s ease-out both;
 }
 
-/* Once the intro has played (e.g. the visitor came back from the game
-   screen), show the welcome screen in its settled state at once. */
-.gate-intro-static .orbit-rotor,
-.gate-intro-static .orbit-counter,
-.gate-intro-static .orbit-lean,
-.gate-intro-static .gate-panel-in {
-  animation: none;
-}
-
 @media (prefers-reduced-motion: reduce) {
-  /* No orbit, no entrance motion — cat rests at the top of the ring
-     and the panel is simply there, ready to use. */
-  .orbit-rotor,
-  .orbit-counter,
-  .orbit-lean,
+  /* No entrance motion — the poster still replaces the video entirely
+     (WelcomeGate does not render it) and the panel is simply there,
+     ready to use. */
   .gate-panel-in,
   .gate-screen-in {
     animation: none;

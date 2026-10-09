@@ -57,6 +57,7 @@ const vi = {
       "Trước khi khám phá thế giới của Duy, hãy chơi một trò nhỏ nhé.",
     start: "Bắt đầu",
     supporting: "Một chút tập trung, một chút may mắn.",
+    skipIntro: "Bỏ qua intro",
     gameEyebrow: "Memory game",
     gameTitle: "Tìm các cặp hình giống nhau",
     gameIntro:
@@ -300,6 +301,7 @@ const en: Dictionary = {
     description: "Before exploring my world, let's play a little game.",
     start: "Let's play",
     supporting: "A little focus, a little luck.",
+    skipIntro: "Skip intro",
     gameEyebrow: "Memory game",
     gameTitle: "Find the matching pairs",
     gameIntro:

@@ -1,6 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState, type KeyboardEvent } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+  type KeyboardEvent,
+} from "react";
 import { useLanguage } from "./LanguageProvider";
 import LanguageSwitcher from "./LanguageSwitcher";
 import MemoryGame from "./MemoryGame";
@@ -10,8 +16,35 @@ const UNLOCK_KEY = "dbn-welcome-unlocked";
 
 type Screen = "welcome" | "game" | "done";
 
+/** Screen A runs in two beats: the intro video plays, then it settles. */
+type IntroPhase = "intro" | "settled";
+
 const FOCUSABLE =
   'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+/*
+ * prefers-reduced-motion, read the React-sanctioned way (same pattern
+ * as ThemeProvider): the server snapshot is `false`, so the server
+ * render and the hydration pass agree, and the real client value takes
+ * over immediately after with no hydration mismatch. Reduced-motion
+ * visitors never get the intro video at all — just the poster still
+ * and the panel, ready to use.
+ */
+const MOTION_QUERY = "(prefers-reduced-motion: reduce)";
+
+function subscribeMotion(callback: () => void): () => void {
+  const mq = window.matchMedia(MOTION_QUERY);
+  mq.addEventListener("change", callback);
+  return () => mq.removeEventListener("change", callback);
+}
+
+function getMotionSnapshot(): boolean {
+  return window.matchMedia(MOTION_QUERY).matches;
+}
+
+function getServerMotionSnapshot(): boolean {
+  return false;
+}
 
 /**
  * Welcome gate — a playful first-visit-per-session overlay (welcome →
@@ -27,6 +60,12 @@ const FOCUSABLE =
  * appears. Unlocking simply stores the flag and removes the attribute;
  * there are no redirects — the visitor is already on the route they
  * asked for, on whichever page the gate was mounted over.
+ *
+ * Screen A opens with a short muted video — the orange cat orbits a
+ * hand-drawn globe and lands on top of it — layered over its poster
+ * still inside a framed stage. When the video ends (or is skipped, or
+ * fails, or a safety timeout fires) the screen settles and the welcome
+ * panel fades in below the stage.
  */
 export default function WelcomeGate() {
   const { t } = useLanguage();
@@ -34,21 +73,55 @@ export default function WelcomeGate() {
   const [screen, setScreen] = useState<Screen>("welcome");
   const [finalMoves, setFinalMoves] = useState<number | null>(null);
   const [gone, setGone] = useState(false);
-  // Set when the cat-orbit intro finishes; if the visitor later comes
-  // back from the game screen, the welcome screen is shown settled.
-  const [introPlayed, setIntroPlayed] = useState(false);
+  // Intro state machine (Screen A). `phase` flips to "settled" when
+  // the video ends, is skipped, errors, or the safety timeout fires.
+  const [phase, setPhase] = useState<IntroPhase>("intro");
+  // Crossfade the video out so the poster still shows instead — used
+  // by Skip and when coming back from the game (never replay).
+  const [videoFaded, setVideoFaded] = useState(false);
+  // The video failed to load/play: drop it entirely, keep the still.
+  const [videoFailed, setVideoFailed] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const reducedMotion = useSyncExternalStore(
+    subscribeMotion,
+    getMotionSnapshot,
+    getServerMotionSnapshot,
+  );
+
+  const showVideo = !reducedMotion && !videoFailed;
+  // Reduced-motion visitors start settled: still + panel, no video.
+  const settled = phase === "settled" || reducedMotion;
+
+  // Safety net: if `ended` never fires (stalled network, odd codec),
+  // settle anyway so the panel — and the way in — always appears.
+  useEffect(() => {
+    if (phase !== "intro" || reducedMotion) return;
+    const id = window.setTimeout(() => setPhase("settled"), 7000);
+    return () => window.clearTimeout(id);
+  }, [phase, reducedMotion]);
 
   // Move focus to the active screen's heading whenever the screen
   // changes — but only while the gate is actually shown, so a returning
-  // (already unlocked) visitor's page is never disturbed.
+  // (already unlocked) visitor's page is never disturbed. On Screen A
+  // the heading only exists once the intro settles; when it appears,
+  // focus it unless the visitor is already using the language switcher.
   useEffect(() => {
-    if (document.documentElement.getAttribute("data-welcome") === "locked") {
-      rootRef.current
-        ?.querySelector<HTMLElement>("[data-gate-heading]")
-        ?.focus();
+    if (document.documentElement.getAttribute("data-welcome") !== "locked") {
+      return;
     }
-  }, [screen]);
+    const active = document.activeElement;
+    if (
+      active &&
+      active !== document.body &&
+      !active.hasAttribute("data-skip-intro")
+    ) {
+      return;
+    }
+    rootRef.current
+      ?.querySelector<HTMLElement>("[data-gate-heading]")
+      ?.focus();
+  }, [screen, settled]);
 
   if (gone) return null;
 
@@ -61,6 +134,21 @@ export default function WelcomeGate() {
     document.documentElement.removeAttribute("data-welcome");
     // Unmount once the CSS fade-out has finished.
     window.setTimeout(() => setGone(true), 400);
+  };
+
+  /** Skip the intro: pause, crossfade to the poster still, settle. */
+  const skipIntro = () => {
+    videoRef.current?.pause();
+    setVideoFaded(true);
+    setPhase("settled");
+  };
+
+  /** Back from the game: settled poster still — never replay the video. */
+  const backToWelcome = () => {
+    videoRef.current?.pause();
+    setVideoFaded(true);
+    setPhase("settled");
+    setScreen("welcome");
   };
 
   /** Keep Tab cycling inside the gate while it is up (aria-modal). */
@@ -98,72 +186,90 @@ export default function WelcomeGate() {
 
       <div className="flex min-h-full items-center justify-center px-5 py-12 sm:px-8">
         {screen === "welcome" && (
-          <div
-            className={`flex w-full flex-col items-center ${
-              introPlayed ? "gate-intro-static" : ""
-            }`}
-          >
-            {/* Intro — the cat makes one gentle revolution around a
-                thin ring, then settles at the ring's top as the panel
-                fades in beneath it. Pure CSS (see globals.css
-                `.orbit-*`); purely decorative. */}
-            <div
-              aria-hidden="true"
-              className="relative aspect-square w-[clamp(220px,60vw,320px)]"
-            >
-              <div className="absolute inset-[18%] rounded-full border border-terracotta/25" />
-              <div
-                className="orbit-rotor absolute inset-[18%]"
-                onAnimationEnd={(e) => {
-                  if (e.target === e.currentTarget) setIntroPlayed(true);
-                }}
-              >
-                <div className="absolute top-0 left-1/2 w-[56.25%] -translate-x-1/2 -translate-y-1/2">
-                  <div className="orbit-counter">
-                    <div className="orbit-lean">
-                      <div className="aspect-square w-full overflow-hidden rounded-full border border-line bg-cream shadow-[0_10px_30px_rgba(22,18,15,0.12)]">
-                        {/* eslint-disable-next-line @next/next/no-img-element -- small static UI asset, same pattern as CatToggle */}
-                        <img
-                          src="/images/cat-day.webp"
-                          alt=""
-                          width={512}
-                          height={512}
-                          loading="eager"
-                          decoding="async"
-                          draggable={false}
-                          className="h-full w-full object-cover select-none"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+          <div className="flex w-full flex-col items-center">
+            {/* Intro stage — a framed square artwork: the poster still
+                underneath, the intro video layered on top of it. The
+                illustration's cream background is baked in, so in dark
+                mode the stage simply reads as a framed picture. When
+                the video ends naturally it stays visible, holding its
+                last frame (the cat on top of the globe). */}
+            <div className="relative aspect-square w-[min(88vw,520px)] overflow-hidden rounded-2xl border border-line bg-cream shadow-[0_18px_50px_rgba(22,18,15,0.1)]">
+              {/* eslint-disable-next-line @next/next/no-img-element -- static poster asset, same pattern as the other gate artwork */}
+              <img
+                src="/images/cat-globe-poster.webp"
+                alt=""
+                width={960}
+                height={960}
+                loading="eager"
+                decoding="async"
+                draggable={false}
+                className="absolute inset-0 h-full w-full object-cover select-none"
+              />
+              {showVideo && (
+                <video
+                  ref={(el) => {
+                    videoRef.current = el;
+                    // React's `muted` prop alone is not always applied
+                    // as the property autoplay policies check — set it
+                    // directly so the muted autoplay reliably starts.
+                    if (el) el.muted = true;
+                  }}
+                  src="/video/cat-orbit-intro.mp4"
+                  poster="/images/cat-globe-poster.webp"
+                  autoPlay
+                  muted
+                  playsInline
+                  preload="auto"
+                  aria-hidden="true"
+                  tabIndex={-1}
+                  onEnded={() => setPhase("settled")}
+                  onError={() => {
+                    setVideoFailed(true);
+                    setPhase("settled");
+                  }}
+                  className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-500 motion-reduce:transition-none ${
+                    videoFaded ? "opacity-0" : "opacity-100"
+                  }`}
+                />
+              )}
+              {!settled && showVideo && (
+                <button
+                  type="button"
+                  data-skip-intro
+                  onClick={skipIntro}
+                  className="absolute right-3 bottom-3 rounded-full border border-line bg-paper/90 px-3.5 py-1.5 text-xs font-medium text-charcoal shadow-[0_4px_14px_rgba(22,18,15,0.12)] backdrop-blur-sm transition-colors hover:bg-paper sm:right-4 sm:bottom-4"
+                >
+                  {w.skipIntro}
+                </button>
+              )}
             </div>
 
-            {/* Welcome panel */}
-            <div className="gate-panel-in mt-8 w-full max-w-[600px] rounded-2xl border border-line bg-panel px-6 py-10 text-center shadow-[0_18px_50px_rgba(22,18,15,0.08)] sm:px-12 sm:py-12">
-              <p className="text-xs font-semibold tracking-[0.24em] text-terracotta uppercase">
-                {w.label}
-              </p>
-              <h2
-                data-gate-heading
-                tabIndex={-1}
-                className="mt-4 font-display text-4xl font-bold tracking-tight outline-none sm:text-5xl"
-              >
-                {w.heading}
-              </h2>
-              <p className="mx-auto mt-5 max-w-md text-base leading-relaxed text-muted sm:text-lg">
-                {w.description}
-              </p>
-              <button
-                type="button"
-                onClick={() => setScreen("game")}
-                className="mt-9 rounded-lg bg-charcoal px-8 py-3.5 text-[15px] font-semibold text-paper transition duration-300 hover:-translate-y-0.5 hover:bg-terracotta motion-reduce:hover:translate-y-0"
-              >
-                {w.start}
-              </button>
-              <p className="mt-5 text-sm text-muted">{w.supporting}</p>
-            </div>
+            {/* Welcome panel — appears once the intro settles. */}
+            {settled && (
+              <div className="gate-panel-in mt-8 w-full max-w-[600px] rounded-2xl border border-line bg-panel px-6 py-10 text-center shadow-[0_18px_50px_rgba(22,18,15,0.08)] sm:px-12 sm:py-12">
+                <p className="text-xs font-semibold tracking-[0.24em] text-terracotta uppercase">
+                  {w.label}
+                </p>
+                <h2
+                  data-gate-heading
+                  tabIndex={-1}
+                  className="mt-4 font-display text-4xl font-bold tracking-tight outline-none sm:text-5xl"
+                >
+                  {w.heading}
+                </h2>
+                <p className="mx-auto mt-5 max-w-md text-base leading-relaxed text-muted sm:text-lg">
+                  {w.description}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setScreen("game")}
+                  className="mt-9 rounded-lg bg-charcoal px-8 py-3.5 text-[15px] font-semibold text-paper transition duration-300 hover:-translate-y-0.5 hover:bg-terracotta motion-reduce:hover:translate-y-0"
+                >
+                  {w.start}
+                </button>
+                <p className="mt-5 text-sm text-muted">{w.supporting}</p>
+              </div>
+            )}
           </div>
         )}
 
@@ -190,7 +296,7 @@ export default function WelcomeGate() {
                   setFinalMoves(moves);
                   setScreen("done");
                 }}
-                onBack={() => setScreen("welcome")}
+                onBack={backToWelcome}
               />
             </div>
           </div>
