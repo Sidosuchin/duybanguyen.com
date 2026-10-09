@@ -186,14 +186,29 @@ export default function WelcomeGate() {
 
       <div className="flex min-h-full items-center justify-center px-5 py-12 sm:px-8">
         {screen === "welcome" && (
-          <div className="flex w-full flex-col items-center">
+          <div
+            className={`flex w-full flex-col items-center ${
+              settled
+                ? "lg:mx-auto lg:max-w-[1100px] lg:flex-row lg:gap-12"
+                : ""
+            }`}
+          >
             {/* Intro stage — a framed square artwork: the poster still
                 underneath, the intro video layered on top of it. The
                 illustration's cream background is baked in, so in dark
                 mode the stage simply reads as a framed picture. When
                 the video ends naturally it stays visible, holding its
-                last frame (the cat on top of the globe). */}
-            <div className="relative aspect-square w-[min(88vw,520px)] overflow-hidden rounded-2xl border border-line bg-cream shadow-[0_18px_50px_rgba(22,18,15,0.1)]">
+                last frame (the cat on top of the globe). While the
+                intro runs, the stage sits centered on its own; once
+                settled, desktop (≥lg) reflows into one unified hero —
+                stage left (~52%), welcome panel right (~48%) — while
+                mobile keeps a single column with a compact stage so
+                the panel and its CTA stay close at hand. */}
+            <div
+              className={`relative aspect-square overflow-hidden rounded-2xl border border-line bg-cream shadow-[0_18px_50px_rgba(22,18,15,0.1)] ${
+                settled ? "w-[min(78vw,340px)] lg:w-[52%]" : "w-[min(88vw,520px)]"
+              }`}
+            >
               {/* eslint-disable-next-line @next/next/no-img-element -- static poster asset, same pattern as the other gate artwork */}
               <img
                 src="/images/cat-globe-poster.webp"
@@ -244,13 +259,16 @@ export default function WelcomeGate() {
               )}
             </div>
 
-            {/* Welcome panel — appears once the intro settles.
-                Storyboard frames 4–5: the sitting cat decorates the
-                bottom-left corner and a coffee-and-books still life
-                the bottom-right, both faded in with a soft radial
-                mask and kept clear of the text by the panel padding. */}
+            {/* Welcome panel — appears once the intro settles, as the
+                right column of the desktop hero (below the compact
+                stage on mobile). Storyboard frames 4–5: the sitting
+                cat tucks into the panel's bottom-left corner, faded
+                in with a soft radial mask and kept clear of the text
+                by the panel padding. The heading carries no border or
+                outline of any kind — the panel's only border is its
+                hairline neutral border-line. */}
             {settled && (
-              <div className="gate-panel-in relative mt-8 w-full max-w-[600px] rounded-2xl border border-line bg-panel px-6 pt-10 pb-16 text-center shadow-[0_18px_50px_rgba(22,18,15,0.08)] sm:px-12 sm:pt-12 sm:pb-[4.5rem]">
+              <div className="gate-panel-in relative mt-6 w-full max-w-[600px] rounded-2xl border border-line bg-panel px-6 pt-10 pb-16 text-center shadow-[0_18px_50px_rgba(22,18,15,0.08)] sm:px-12 sm:pt-12 sm:pb-[4.5rem] lg:mt-0 lg:w-[48%] lg:max-w-none">
                 {/* eslint-disable-next-line @next/next/no-img-element -- static decorative asset, same pattern as the other gate artwork */}
                 <img
                   src="/images/panel-cat.webp"
@@ -261,19 +279,7 @@ export default function WelcomeGate() {
                   decoding="async"
                   draggable={false}
                   aria-hidden="true"
-                  className="gate-decor-mask pointer-events-none absolute -bottom-9 left-2 w-[92px] select-none sm:-left-6 sm:w-[150px] lg:-left-12 lg:w-[168px]"
-                />
-                {/* eslint-disable-next-line @next/next/no-img-element -- static decorative asset, same pattern as the other gate artwork */}
-                <img
-                  src="/images/panel-decor.webp"
-                  alt=""
-                  width={480}
-                  height={480}
-                  loading="eager"
-                  decoding="async"
-                  draggable={false}
-                  aria-hidden="true"
-                  className="gate-decor-mask pointer-events-none absolute -bottom-4 right-5 hidden w-[104px] select-none sm:block"
+                  className="gate-decor-mask pointer-events-none absolute -bottom-9 left-2 w-[92px] select-none sm:w-[120px] lg:-left-8 lg:w-[132px]"
                 />
                 <div className="relative">
                   <p className="text-xs font-semibold tracking-[0.24em] text-terracotta uppercase">
