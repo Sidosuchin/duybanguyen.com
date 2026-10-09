@@ -244,61 +244,88 @@ export default function WelcomeGate() {
               )}
             </div>
 
-            {/* Welcome panel — appears once the intro settles. */}
+            {/* Welcome panel — appears once the intro settles.
+                Storyboard frames 4–5: the sitting cat decorates the
+                bottom-left corner and a coffee-and-books still life
+                the bottom-right, both faded in with a soft radial
+                mask and kept clear of the text by the panel padding. */}
             {settled && (
-              <div className="gate-panel-in mt-8 w-full max-w-[600px] rounded-2xl border border-line bg-panel px-6 py-10 text-center shadow-[0_18px_50px_rgba(22,18,15,0.08)] sm:px-12 sm:py-12">
-                <p className="text-xs font-semibold tracking-[0.24em] text-terracotta uppercase">
-                  {w.label}
-                </p>
-                <h2
-                  data-gate-heading
-                  tabIndex={-1}
-                  className="mt-4 font-display text-4xl font-bold tracking-tight outline-none sm:text-5xl"
-                >
-                  {w.heading}
-                </h2>
-                <p className="mx-auto mt-5 max-w-md text-base leading-relaxed text-muted sm:text-lg">
-                  {w.description}
-                </p>
-                <button
-                  type="button"
-                  onClick={() => setScreen("game")}
-                  className="mt-9 rounded-lg bg-charcoal px-8 py-3.5 text-[15px] font-semibold text-paper transition duration-300 hover:-translate-y-0.5 hover:bg-terracotta motion-reduce:hover:translate-y-0"
-                >
-                  {w.start}
-                </button>
-                <p className="mt-5 text-sm text-muted">{w.supporting}</p>
+              <div className="gate-panel-in relative mt-8 w-full max-w-[600px] rounded-2xl border border-line bg-panel px-6 pt-10 pb-16 text-center shadow-[0_18px_50px_rgba(22,18,15,0.08)] sm:px-12 sm:pt-12 sm:pb-[4.5rem]">
+                {/* eslint-disable-next-line @next/next/no-img-element -- static decorative asset, same pattern as the other gate artwork */}
+                <img
+                  src="/images/panel-cat.webp"
+                  alt=""
+                  width={480}
+                  height={480}
+                  loading="eager"
+                  decoding="async"
+                  draggable={false}
+                  aria-hidden="true"
+                  className="gate-decor-mask pointer-events-none absolute -bottom-9 left-2 w-[92px] select-none sm:-left-6 sm:w-[150px] lg:-left-12 lg:w-[168px]"
+                />
+                {/* eslint-disable-next-line @next/next/no-img-element -- static decorative asset, same pattern as the other gate artwork */}
+                <img
+                  src="/images/panel-decor.webp"
+                  alt=""
+                  width={480}
+                  height={480}
+                  loading="eager"
+                  decoding="async"
+                  draggable={false}
+                  aria-hidden="true"
+                  className="gate-decor-mask pointer-events-none absolute -bottom-4 right-5 hidden w-[104px] select-none sm:block"
+                />
+                <div className="relative">
+                  <p className="text-xs font-semibold tracking-[0.24em] text-terracotta uppercase">
+                    {w.label}
+                  </p>
+                  <h2
+                    data-gate-heading
+                    tabIndex={-1}
+                    className="mt-4 font-display text-4xl font-bold tracking-tight outline-none sm:text-5xl"
+                  >
+                    {w.heading}
+                  </h2>
+                  <p className="mx-auto mt-5 max-w-md text-base leading-relaxed text-muted sm:text-lg">
+                    {w.description}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setScreen("game")}
+                    className="group mt-9 inline-flex items-center gap-2 rounded-full bg-charcoal px-8 py-3.5 text-[15px] font-semibold text-paper transition duration-300 hover:-translate-y-0.5 hover:bg-terracotta motion-reduce:hover:translate-y-0"
+                  >
+                    {w.start}
+                    <svg
+                      aria-hidden="true"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1 motion-reduce:transition-none motion-reduce:group-hover:translate-x-0"
+                    >
+                      <path d="M4 12h16m-6-6 6 6-6 6" />
+                    </svg>
+                  </button>
+                  <p className="mt-5 text-sm text-muted">{w.supporting}</p>
+                </div>
               </div>
             )}
           </div>
         )}
 
         {screen === "game" && (
-          <div className="gate-screen-in w-full max-w-xl text-center">
-            <p className="flex items-center justify-center gap-3 text-xs font-semibold tracking-[0.24em] text-terracotta uppercase">
-              <span aria-hidden="true" className="h-px w-10 bg-terracotta" />
-              {w.gameEyebrow}
-              <span aria-hidden="true" className="h-px w-10 bg-terracotta" />
-            </p>
-            <h2
-              data-gate-heading
-              tabIndex={-1}
-              className="mt-4 font-display text-3xl font-extrabold tracking-tight outline-none sm:text-4xl"
-            >
-              {w.gameTitle}
-            </h2>
-            <p className="mx-auto mt-4 max-w-md leading-relaxed text-muted">
-              {w.gameIntro}
-            </p>
-            <div className="mt-7">
-              <MemoryGame
-                onWin={(moves) => {
-                  setFinalMoves(moves);
-                  setScreen("done");
-                }}
-                onBack={backToWelcome}
-              />
-            </div>
+          <div className="gate-screen-in w-full max-w-xl">
+            {/* The game renders its own frame-6 header (back button,
+                title, counters) — see MemoryGame. */}
+            <MemoryGame
+              onWin={(moves) => {
+                setFinalMoves(moves);
+                setScreen("done");
+              }}
+              onBack={backToWelcome}
+            />
           </div>
         )}
 

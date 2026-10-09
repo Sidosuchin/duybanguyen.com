@@ -203,6 +203,21 @@ html[data-welcome="locked"] body {
   animation: gate-screen-in 0.45s ease-out both;
 }
 
+/*
+ * Soft radial fade for the welcome panel's decorative illustrations
+ * (sitting cat, coffee-and-books still life). The crops carry the
+ * illustration's baked-in cream background, so their edges are masked
+ * out radially and melt into the panel surface in both themes.
+ */
+.gate-decor-mask {
+  -webkit-mask-image: radial-gradient(
+    closest-side,
+    black 62%,
+    transparent 100%
+  );
+  mask-image: radial-gradient(closest-side, black 62%, transparent 100%);
+}
+
 @media (prefers-reduced-motion: reduce) {
   /* No entrance motion — the poster still replaces the video entirely
      (WelcomeGate does not render it) and the panel is simply there,
