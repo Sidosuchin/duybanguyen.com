@@ -51,10 +51,12 @@ const vi = {
   },
   welcome: {
     dialogLabel: "Màn hình chào — trò chơi lật thẻ tìm cặp",
-    eyebrow: "Welcome",
-    title: "Chào bạn!",
-    body: "Trước khi khám phá thế giới của Duy, hãy chơi một trò nhỏ nhé.",
+    label: "WELCOME",
+    heading: "Chào bạn, mình là Duy.",
+    description:
+      "Trước khi khám phá thế giới của Duy, hãy chơi một trò nhỏ nhé.",
     start: "Bắt đầu",
+    supporting: "Một chút tập trung, một chút may mắn.",
     gameEyebrow: "Memory game",
     gameTitle: "Tìm các cặp hình giống nhau",
     gameIntro:
@@ -293,10 +295,11 @@ const en: Dictionary = {
   },
   welcome: {
     dialogLabel: "Welcome screen — memory matching game",
-    eyebrow: "Welcome",
-    title: "Welcome!",
-    body: "Before exploring Duy's world, let's play a little game.",
-    start: "Start playing",
+    label: "WELCOME",
+    heading: "Hey, I'm Duy.",
+    description: "Before exploring my world, let's play a little game.",
+    start: "Let's play",
+    supporting: "A little focus, a little luck.",
     gameEyebrow: "Memory game",
     gameTitle: "Find the matching pairs",
     gameIntro:

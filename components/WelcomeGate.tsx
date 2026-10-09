@@ -34,6 +34,9 @@ export default function WelcomeGate() {
   const [screen, setScreen] = useState<Screen>("welcome");
   const [finalMoves, setFinalMoves] = useState<number | null>(null);
   const [gone, setGone] = useState(false);
+  // Set when the cat-orbit intro finishes; if the visitor later comes
+  // back from the game screen, the welcome screen is shown settled.
+  const [introPlayed, setIntroPlayed] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
 
   // Move focus to the active screen's heading whenever the screen
@@ -95,47 +98,77 @@ export default function WelcomeGate() {
 
       <div className="flex min-h-full items-center justify-center px-5 py-12 sm:px-8">
         {screen === "welcome" && (
-          <div className="w-full max-w-xl text-center">
-            <div className="mx-auto h-28 w-28 overflow-hidden rounded-full border border-line shadow-[0_10px_30px_rgba(22,18,15,0.12)] sm:h-36 sm:w-36">
-              {/* eslint-disable-next-line @next/next/no-img-element -- small static UI asset, same pattern as CatToggle */}
-              <img
-                src="/images/cat-day.webp"
-                alt=""
-                width={512}
-                height={512}
-                loading="eager"
-                decoding="async"
-                draggable={false}
-                className="h-full w-full object-cover select-none"
-              />
+          <div
+            className={`flex w-full flex-col items-center ${
+              introPlayed ? "gate-intro-static" : ""
+            }`}
+          >
+            {/* Intro — the cat makes one gentle revolution around a
+                thin ring, then settles at the ring's top as the panel
+                fades in beneath it. Pure CSS (see globals.css
+                `.orbit-*`); purely decorative. */}
+            <div
+              aria-hidden="true"
+              className="relative aspect-square w-[clamp(220px,60vw,320px)]"
+            >
+              <div className="absolute inset-[18%] rounded-full border border-terracotta/25" />
+              <div
+                className="orbit-rotor absolute inset-[18%]"
+                onAnimationEnd={(e) => {
+                  if (e.target === e.currentTarget) setIntroPlayed(true);
+                }}
+              >
+                <div className="absolute top-0 left-1/2 w-[56.25%] -translate-x-1/2 -translate-y-1/2">
+                  <div className="orbit-counter">
+                    <div className="orbit-lean">
+                      <div className="aspect-square w-full overflow-hidden rounded-full border border-line bg-cream shadow-[0_10px_30px_rgba(22,18,15,0.12)]">
+                        {/* eslint-disable-next-line @next/next/no-img-element -- small static UI asset, same pattern as CatToggle */}
+                        <img
+                          src="/images/cat-day.webp"
+                          alt=""
+                          width={512}
+                          height={512}
+                          loading="eager"
+                          decoding="async"
+                          draggable={false}
+                          className="h-full w-full object-cover select-none"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
-            <p className="mt-8 flex items-center justify-center gap-3 text-xs font-semibold tracking-[0.24em] text-terracotta uppercase">
-              <span aria-hidden="true" className="h-px w-10 bg-terracotta" />
-              {w.eyebrow}
-              <span aria-hidden="true" className="h-px w-10 bg-terracotta" />
-            </p>
-            <h2
-              data-gate-heading
-              tabIndex={-1}
-              className="mt-5 font-display text-4xl font-extrabold tracking-tight outline-none sm:text-5xl"
-            >
-              {w.title}
-            </h2>
-            <p className="mx-auto mt-5 max-w-md text-base leading-relaxed text-muted sm:text-lg">
-              {w.body}
-            </p>
-            <button
-              type="button"
-              onClick={() => setScreen("game")}
-              className="mt-9 rounded-lg bg-charcoal px-8 py-3.5 text-[15px] font-semibold text-paper transition-colors hover:bg-terracotta"
-            >
-              {w.start}
-            </button>
+
+            {/* Welcome panel */}
+            <div className="gate-panel-in mt-8 w-full max-w-[600px] rounded-2xl border border-line bg-panel px-6 py-10 text-center shadow-[0_18px_50px_rgba(22,18,15,0.08)] sm:px-12 sm:py-12">
+              <p className="text-xs font-semibold tracking-[0.24em] text-terracotta uppercase">
+                {w.label}
+              </p>
+              <h2
+                data-gate-heading
+                tabIndex={-1}
+                className="mt-4 font-display text-4xl font-bold tracking-tight outline-none sm:text-5xl"
+              >
+                {w.heading}
+              </h2>
+              <p className="mx-auto mt-5 max-w-md text-base leading-relaxed text-muted sm:text-lg">
+                {w.description}
+              </p>
+              <button
+                type="button"
+                onClick={() => setScreen("game")}
+                className="mt-9 rounded-lg bg-charcoal px-8 py-3.5 text-[15px] font-semibold text-paper transition duration-300 hover:-translate-y-0.5 hover:bg-terracotta motion-reduce:hover:translate-y-0"
+              >
+                {w.start}
+              </button>
+              <p className="mt-5 text-sm text-muted">{w.supporting}</p>
+            </div>
           </div>
         )}
 
         {screen === "game" && (
-          <div className="w-full max-w-xl text-center">
+          <div className="gate-screen-in w-full max-w-xl text-center">
             <p className="flex items-center justify-center gap-3 text-xs font-semibold tracking-[0.24em] text-terracotta uppercase">
               <span aria-hidden="true" className="h-px w-10 bg-terracotta" />
               {w.gameEyebrow}
@@ -164,7 +197,7 @@ export default function WelcomeGate() {
         )}
 
         {screen === "done" && (
-          <div className="w-full max-w-xl text-center">
+          <div className="gate-screen-in w-full max-w-xl text-center">
             <div className="mx-auto h-28 w-28 overflow-hidden rounded-full border border-line shadow-[0_10px_30px_rgba(22,18,15,0.12)] sm:h-36 sm:w-36">
               {/* eslint-disable-next-line @next/next/no-img-element -- small static UI asset, same pattern as CatToggle */}
               <img

@@ -7,6 +7,7 @@
   --color-paper: #faf6f0; /* warm cream background */
   --color-cream: #f1eadd; /* slightly deeper warm surface */
   --color-cream-soft: #f6f0e6; /* in-between surface for alternating sections */
+  --color-panel: #fdfbf8; /* welcome panel — a touch lighter than the page */
   --color-charcoal: #211d1a; /* primary text */
   --color-ink: #16120f; /* near-black, display headings on dark */
   --color-terracotta: #bc5633; /* accent */
@@ -57,6 +58,7 @@ body {
   --color-paper: #1d1917; /* warm deep charcoal page background */
   --color-cream: #2b241e; /* raised surface */
   --color-cream-soft: #241e1a; /* in-between surface for alternating sections */
+  --color-panel: #2b241e; /* welcome panel — the lighter dark surface (same as cream) */
   --color-charcoal: #f5efe6; /* primary text — warm cream */
   --color-muted: #b3a696; /* secondary text */
   --color-line: #3d342b; /* subtle 1px borders */
@@ -159,6 +161,116 @@ html[data-welcome="locked"] .welcome-gate {
 /* Lock page scroll while the gate is up (applies pre-hydration too) */
 html[data-welcome="locked"] body {
   overflow: hidden;
+}
+
+/*
+ * Welcome screen intro — the orange cat makes one gentle revolution
+ * around a thin ring, then settles at the top of the ring while the
+ * panel fades in beneath it. Pure CSS: a rotating wrapper carries the
+ * cat around the circle, a counter-rotating holder with the exact same
+ * duration and timing function keeps the cat upright at every instant
+ * (the two rotations cancel precisely), and an innermost layer adds a
+ * small lean sway so the cat seems to lean into the motion. The whole
+ * sequence is decorative and finishes in under two seconds; it never
+ * blocks interaction.
+ */
+@keyframes gate-orbit-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes gate-orbit-counter {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(-360deg);
+  }
+}
+
+@keyframes gate-orbit-lean {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  30% {
+    transform: rotate(7deg);
+  }
+  55% {
+    transform: rotate(0deg);
+  }
+  80% {
+    transform: rotate(-5deg);
+  }
+}
+
+@keyframes gate-panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes gate-screen-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.orbit-rotor {
+  animation: gate-orbit-spin 1.9s cubic-bezier(0.2, 0.65, 0.25, 1) both;
+}
+
+.orbit-counter {
+  animation: gate-orbit-counter 1.9s cubic-bezier(0.2, 0.65, 0.25, 1) both;
+}
+
+.orbit-lean {
+  animation: gate-orbit-lean 1.9s ease-in-out both;
+}
+
+/* The panel lands just as the cat completes its revolution. */
+.gate-panel-in {
+  animation: gate-panel-in 0.7s cubic-bezier(0.22, 1, 0.36, 1) 1.05s both;
+}
+
+/* Screen changes inside the gate (welcome → game → done). */
+.gate-screen-in {
+  animation: gate-screen-in 0.45s ease-out both;
+}
+
+/* Once the intro has played (e.g. the visitor came back from the game
+   screen), show the welcome screen in its settled state at once. */
+.gate-intro-static .orbit-rotor,
+.gate-intro-static .orbit-counter,
+.gate-intro-static .orbit-lean,
+.gate-intro-static .gate-panel-in {
+  animation: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* No orbit, no entrance motion — cat rests at the top of the ring
+     and the panel is simply there, ready to use. */
+  .orbit-rotor,
+  .orbit-counter,
+  .orbit-lean,
+  .gate-panel-in,
+  .gate-screen-in {
+    animation: none;
+  }
 }
 
 /* Memory game — 3D card flip. State lives in `data-state` on the card
