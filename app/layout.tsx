@@ -6,6 +6,7 @@ import Footer from "@/components/Footer";
 import { LanguageProvider } from "@/components/LanguageProvider";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import CatToggle from "@/components/CatToggle";
+import WelcomeGate from "@/components/WelcomeGate";
 import SkipLink from "@/components/SkipLink";
 import { site } from "@/data/site";
 import { pick } from "@/lib/i18n";
@@ -73,6 +74,15 @@ const personJsonLd = {
  */
 const themeInitScript = `(function(){try{if(window.localStorage.getItem("dbn-theme")==="dark"){document.documentElement.classList.add("dark")}}catch(e){}})();`;
 
+/**
+ * Same pre-paint pattern for the welcome gate: if this session has not
+ * unlocked the site yet, flag <html> so the gate overlay (rendered by
+ * WelcomeGate) is visible from the first paint — no flash of the page
+ * behind it. sessionStorage only: a new browser session sees the gate
+ * again. Any storage error fails open — the gate simply never appears.
+ */
+const welcomeInitScript = `(function(){try{if(window.sessionStorage.getItem("dbn-welcome-unlocked")!=="1"){document.documentElement.setAttribute("data-welcome","locked")}}catch(e){}})();`;
+
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
@@ -82,6 +92,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+        <script dangerouslySetInnerHTML={{ __html: welcomeInitScript }} />
       </head>
       <body className="flex min-h-screen flex-col bg-paper font-body text-charcoal antialiased">
         <script
@@ -97,6 +108,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             </main>
             <Footer />
             <CatToggle />
+            <WelcomeGate />
           </LanguageProvider>
         </ThemeProvider>
       </body>

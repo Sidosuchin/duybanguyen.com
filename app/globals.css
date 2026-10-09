@@ -131,6 +131,77 @@ section {
   background-size: 22px 22px;
 }
 
+/*
+ * Welcome gate — a first-visit-per-session overlay with a small memory
+ * game. Visibility is driven entirely by the `data-welcome="locked"`
+ * attribute that the pre-paint script in the root layout sets on <html>
+ * when this session has not unlocked the site yet, so the gate is on
+ * screen before hydration with no flash of the page behind it. Without
+ * the attribute (returning session, sessionStorage unavailable, or no
+ * JS at all) the gate stays hidden — the gate always fails open.
+ */
+.welcome-gate {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    opacity 0.35s ease,
+    visibility 0s linear 0.35s;
+}
+
+html[data-welcome="locked"] .welcome-gate {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transition: opacity 0.35s ease;
+}
+
+/* Lock page scroll while the gate is up (applies pre-hydration too) */
+html[data-welcome="locked"] body {
+  overflow: hidden;
+}
+
+/* Memory game — 3D card flip. State lives in `data-state` on the card
+   button: "down" shows the back design, "up"/"found" rotate the inner
+   wrapper so the picture face shows. */
+.memory-card {
+  perspective: 700px;
+}
+
+.memory-card-inner {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.memory-card[data-state="up"] .memory-card-inner,
+.memory-card[data-state="found"] .memory-card-inner {
+  transform: rotateY(180deg);
+}
+
+.memory-card-face {
+  position: absolute;
+  inset: 0;
+  display: block;
+  border-radius: 0.9rem;
+  overflow: hidden;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.memory-card-front {
+  transform: rotateY(180deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .memory-card-inner {
+    transition: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;

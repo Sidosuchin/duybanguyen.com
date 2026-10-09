@@ -1,0 +1,219 @@
+"use client";
+
+import { useEffect, useRef, useState, type KeyboardEvent } from "react";
+import { useLanguage } from "./LanguageProvider";
+import LanguageSwitcher from "./LanguageSwitcher";
+import MemoryGame from "./MemoryGame";
+
+/** sessionStorage flag — set once the visitor finishes the game. */
+const UNLOCK_KEY = "dbn-welcome-unlocked";
+
+type Screen = "welcome" | "game" | "done";
+
+const FOCUSABLE =
+  'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+/**
+ * Welcome gate — a playful first-visit-per-session overlay (welcome →
+ * memory game → completion), NOT a login. Whether it is visible is
+ * decided before first paint: the inline script in the root layout sets
+ * `data-welcome="locked"` on <html> when this session has no unlock
+ * flag, and CSS (globals.css `.welcome-gate`) shows the overlay only
+ * while that attribute is present. This component therefore renders the
+ * exact same DOM on the server and the client — no hydration mismatch,
+ * no flash of the site — and React only manages the three screens and
+ * dismissal. If sessionStorage is unavailable (private mode), the
+ * script fails open: the attribute is never set and the gate never
+ * appears. Unlocking simply stores the flag and removes the attribute;
+ * there are no redirects — the visitor is already on the route they
+ * asked for, on whichever page the gate was mounted over.
+ */
+export default function WelcomeGate() {
+  const { t } = useLanguage();
+  const w = t.welcome;
+  const [screen, setScreen] = useState<Screen>("welcome");
+  const [finalMoves, setFinalMoves] = useState<number | null>(null);
+  const [gone, setGone] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+
+  // Move focus to the active screen's heading whenever the screen
+  // changes — but only while the gate is actually shown, so a returning
+  // (already unlocked) visitor's page is never disturbed.
+  useEffect(() => {
+    if (document.documentElement.getAttribute("data-welcome") === "locked") {
+      rootRef.current
+        ?.querySelector<HTMLElement>("[data-gate-heading]")
+        ?.focus();
+    }
+  }, [screen]);
+
+  if (gone) return null;
+
+  const enterSite = () => {
+    try {
+      window.sessionStorage.setItem(UNLOCK_KEY, "1");
+    } catch {
+      // storage unavailable — still dismiss for this page view
+    }
+    document.documentElement.removeAttribute("data-welcome");
+    // Unmount once the CSS fade-out has finished.
+    window.setTimeout(() => setGone(true), 400);
+  };
+
+  /** Keep Tab cycling inside the gate while it is up (aria-modal). */
+  const trapTab = (e: KeyboardEvent<HTMLDivElement>) => {
+    if (e.key !== "Tab") return;
+    const root = rootRef.current;
+    if (!root) return;
+    const items = Array.from(root.querySelectorAll<HTMLElement>(FOCUSABLE));
+    if (items.length === 0) return;
+    const first = items[0];
+    const last = items[items.length - 1];
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first.focus();
+    }
+  };
+
+  return (
+    <div
+      ref={rootRef}
+      role="dialog"
+      aria-modal="true"
+      aria-label={w.dialogLabel}
+      onKeyDown={trapTab}
+      className="welcome-gate fixed inset-0 z-[80] overflow-y-auto bg-paper text-charcoal"
+    >
+      {/* The VI|EN switcher stays reachable while the gate is up, so the
+          whole gate (like the rest of the site) switches instantly. */}
+      <div className="absolute top-4 right-4 z-10 sm:top-6 sm:right-6">
+        <LanguageSwitcher />
+      </div>
+
+      <div className="flex min-h-full items-center justify-center px-5 py-12 sm:px-8">
+        {screen === "welcome" && (
+          <div className="w-full max-w-xl text-center">
+            <div className="mx-auto h-28 w-28 overflow-hidden rounded-full border border-line shadow-[0_10px_30px_rgba(22,18,15,0.12)] sm:h-36 sm:w-36">
+              {/* eslint-disable-next-line @next/next/no-img-element -- small static UI asset, same pattern as CatToggle */}
+              <img
+                src="/images/cat-day.webp"
+                alt=""
+                width={512}
+                height={512}
+                loading="eager"
+                decoding="async"
+                draggable={false}
+                className="h-full w-full object-cover select-none"
+              />
+            </div>
+            <p className="mt-8 flex items-center justify-center gap-3 text-xs font-semibold tracking-[0.24em] text-terracotta uppercase">
+              <span aria-hidden="true" className="h-px w-10 bg-terracotta" />
+              {w.eyebrow}
+              <span aria-hidden="true" className="h-px w-10 bg-terracotta" />
+            </p>
+            <h2
+              data-gate-heading
+              tabIndex={-1}
+              className="mt-5 font-display text-4xl font-extrabold tracking-tight outline-none sm:text-5xl"
+            >
+              {w.title}
+            </h2>
+            <p className="mx-auto mt-5 max-w-md text-base leading-relaxed text-muted sm:text-lg">
+              {w.body}
+            </p>
+            <button
+              type="button"
+              onClick={() => setScreen("game")}
+              className="mt-9 rounded-lg bg-charcoal px-8 py-3.5 text-[15px] font-semibold text-paper transition-colors hover:bg-terracotta"
+            >
+              {w.start}
+            </button>
+          </div>
+        )}
+
+        {screen === "game" && (
+          <div className="w-full max-w-xl text-center">
+            <p className="flex items-center justify-center gap-3 text-xs font-semibold tracking-[0.24em] text-terracotta uppercase">
+              <span aria-hidden="true" className="h-px w-10 bg-terracotta" />
+              {w.gameEyebrow}
+              <span aria-hidden="true" className="h-px w-10 bg-terracotta" />
+            </p>
+            <h2
+              data-gate-heading
+              tabIndex={-1}
+              className="mt-4 font-display text-3xl font-extrabold tracking-tight outline-none sm:text-4xl"
+            >
+              {w.gameTitle}
+            </h2>
+            <p className="mx-auto mt-4 max-w-md leading-relaxed text-muted">
+              {w.gameIntro}
+            </p>
+            <div className="mt-7">
+              <MemoryGame
+                onWin={(moves) => {
+                  setFinalMoves(moves);
+                  setScreen("done");
+                }}
+                onBack={() => setScreen("welcome")}
+              />
+            </div>
+          </div>
+        )}
+
+        {screen === "done" && (
+          <div className="w-full max-w-xl text-center">
+            <div className="mx-auto h-28 w-28 overflow-hidden rounded-full border border-line shadow-[0_10px_30px_rgba(22,18,15,0.12)] sm:h-36 sm:w-36">
+              {/* eslint-disable-next-line @next/next/no-img-element -- small static UI asset, same pattern as CatToggle */}
+              <img
+                src="/images/cat-night.webp"
+                alt=""
+                width={512}
+                height={512}
+                loading="eager"
+                decoding="async"
+                draggable={false}
+                className="h-full w-full object-cover select-none"
+              />
+            </div>
+            <p className="mt-8 flex items-center justify-center gap-3 text-xs font-semibold tracking-[0.24em] text-terracotta uppercase">
+              <span aria-hidden="true" className="h-px w-10 bg-terracotta" />
+              {w.doneEyebrow}
+              <span aria-hidden="true" className="h-px w-10 bg-terracotta" />
+            </p>
+            <h2
+              data-gate-heading
+              tabIndex={-1}
+              className="mt-5 font-display text-4xl font-extrabold tracking-tight outline-none sm:text-5xl"
+            >
+              {w.doneTitle}
+            </h2>
+            <p className="mx-auto mt-5 max-w-md text-base leading-relaxed text-muted sm:text-lg">
+              {w.doneBody}
+            </p>
+            {finalMoves !== null && (
+              <p className="mt-3 text-sm font-medium text-terracotta">
+                {w.doneMoves.replace("{moves}", String(finalMoves))}
+              </p>
+            )}
+            <button
+              type="button"
+              onClick={enterSite}
+              className="mt-9 rounded-lg bg-charcoal px-8 py-3.5 text-[15px] font-semibold text-paper transition-colors hover:bg-terracotta"
+            >
+              {w.enter}
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Without JS the pre-paint script cannot run either, but keep the
+          gate out of the way regardless — it must never trap a visitor. */}
+      <noscript>
+        <style>{`.welcome-gate{display:none!important}`}</style>
+      </noscript>
+    </div>
+  );
+}
