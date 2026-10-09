@@ -167,7 +167,8 @@ html[data-welcome="locked"] body {
  * Welcome screen entrance motion. The intro itself is a short muted
  * video (the cat orbiting a hand-drawn globe) played once over its
  * poster still; its state machine lives in WelcomeGate.tsx. The CSS
- * here only carries the panel/screen entrances below.
+ * here carries the panel/screen entrances and the video's silhouette
+ * mask below.
  */
 
 @keyframes gate-panel-in {
@@ -204,44 +205,23 @@ html[data-welcome="locked"] body {
 }
 
 /*
- * Edge-dissolve for the welcome artwork (poster still + intro video).
- * The illustration's cream background is baked in, so instead of a
- * framed rectangle the artwork itself is masked with a large radial
- * gradient and melts into the gate's page background — one continuous
- * scene in both themes (a soft vignette on dark). The gradient is
- * deliberately wide and its solid core generous: the globe, the city,
- * the orbit ring, the poster's sitting cat (bottom-left) and the
- * video's cat on top of the globe all sit far from the corners and
- * stay solid and legible, while the artwork's outer cream corners and
- * leaf decorations dissolve away.
+ * Silhouette mask for the intro video. The artwork's paper background
+ * has been matted out of the still assets themselves (genuine alpha),
+ * but the mp4's frames still carry the paper — so the video is
+ * clipped by a union silhouette of the whole orbit animation
+ * (cat-orbit-mask.webp: white RGB + alpha, same 960×960 frame) and
+ * only the illustration content is ever visible, in every browser
+ * (Safari via the -webkit- prefix). The stills need no mask at all.
  */
-.gate-art-mask {
-  -webkit-mask-image: radial-gradient(
-    130% 130% at 50% 46%,
-    black 65%,
-    transparent 92%
-  );
-  mask-image: radial-gradient(
-    130% 130% at 50% 46%,
-    black 65%,
-    transparent 92%
-  );
-}
-
-/*
- * Soft radial melt for the greeter cat that joins the scene beside
- * the artwork once the intro video ends. The crop carries the
- * illustration's baked-in cream background, so its edges are masked
- * out radially and the cat grounds into the page background instead
- * of reading as a sticker, in both themes.
- */
-.gate-decor-mask {
-  -webkit-mask-image: radial-gradient(
-    closest-side,
-    black 62%,
-    transparent 100%
-  );
-  mask-image: radial-gradient(closest-side, black 62%, transparent 100%);
+.gate-video-mask {
+  -webkit-mask-image: url(/images/cat-orbit-mask.webp);
+  mask-image: url(/images/cat-orbit-mask.webp);
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
 }
 
 @media (prefers-reduced-motion: reduce) {

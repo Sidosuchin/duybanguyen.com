@@ -62,16 +62,57 @@ function getServerMotionSnapshot(): boolean {
  * asked for, on whichever page the gate was mounted over.
  *
  * Screen A is ONE integrated editorial scene, not two boxes: the
- * artwork (poster still, with the intro video layered on top) carries
- * a radial edge-dissolve mask so its baked-in cream melts into the
- * gate's page background, and once the intro settles (video end, skip,
- * failure, or the safety timeout) the welcome text fades in beside it
- * as a plain block floating on the same background — no stage frame,
- * no panel card. When the video ends naturally, a small greeter cat
- * joins the scene at the artwork's lower-left; the poster still
- * already contains a sitting cat, so the greeter only appears on the
- * video path (tracked via `settledVia`).
+ * artwork's paper background has been matted out of the assets
+ * themselves, so the poster still is genuinely transparent and sits
+ * directly on the gate's page background, and the intro video is
+ * clipped by a silhouette mask of its own animation — no framed
+ * rectangle in any state. Once the intro settles (video end, skip,
+ * failure, or the safety timeout) the welcome text fades in beside
+ * it as a plain block floating on the same background — no stage
+ * frame, no panel card. When the video ends naturally, a matted
+ * still of its last frame crossfades over the video and a small
+ * greeter cat joins the scene inside the artwork's lower-left; the
+ * poster still already contains a sitting cat, so the greeter only
+ * appears on the video path (tracked via `settledVia`).
  */
+/**
+ * The intro video's last frame as a matted still (the cat standing on
+ * top of the globe, paper genuinely transparent). On the natural
+ * video path it crossfades in over the ended video: pixel-identical
+ * artwork, but with no paper at all, so the settled scene has no
+ * rectangle in any browser. Fades from opacity 0 on mount over
+ * ~0.6s (double rAF so the transition reliably runs).
+ */
+function FinalStill() {
+  const [shown, setShown] = useState(false);
+  useEffect(() => {
+    let raf2 = 0;
+    const raf1 = window.requestAnimationFrame(() => {
+      raf2 = window.requestAnimationFrame(() => setShown(true));
+    });
+    return () => {
+      window.cancelAnimationFrame(raf1);
+      window.cancelAnimationFrame(raf2);
+    };
+  }, []);
+  return (
+    // eslint-disable-next-line @next/next/no-img-element -- static settled-state asset, same pattern as the other gate artwork
+    <img
+      src="/images/cat-globe-final.webp"
+      alt=""
+      width={960}
+      height={960}
+      loading="eager"
+      decoding="async"
+      draggable={false}
+      aria-hidden="true"
+      className={`pointer-events-none absolute inset-0 h-full w-full object-cover transition-opacity duration-[600ms] motion-reduce:transition-none ${
+        shown ? "opacity-100" : "opacity-0"
+      }`}
+    />
+  );
+}
+
 export default function WelcomeGate() {
   const { t } = useLanguage();
   const w = t.welcome;
@@ -211,21 +252,20 @@ export default function WelcomeGate() {
             }`}
           >
             {/* Intro stage — the artwork itself, unframed: the poster
-                still underneath, the intro video layered on top, both
-                carrying the .gate-art-mask radial edge-dissolve so the
-                illustration melts into the page background instead of
-                ending at a hard square edge. The mask is identical in
-                every state (intro, settled last frame, poster), so
-                nothing jumps when states change. While the intro runs
-                the artwork sits centered on its own; once settled,
-                desktop (≥lg) reflows into the hero — artwork left
-                (~54%), welcome text right (~46%) — while mobile keeps
-                a single column with a compact artwork so the text and
-                its CTA stay close at hand. When the video ends
-                naturally it stays visible, holding its last frame
-                (the cat on top of the globe), and the greeter cat
-                fades in at the artwork's lower-left as part of the
-                same scene. */}
+                still underneath (its paper matted out of the asset, so
+                it is genuinely transparent), the intro video layered
+                on top and clipped by .gate-video-mask — a silhouette
+                of the whole orbit animation — so the video's paper
+                never shows either. While the intro runs the artwork
+                sits centered on its own; once settled, desktop (≥lg)
+                reflows into the hero — artwork left (~54%), welcome
+                text right (~46%) — while mobile keeps a single column
+                with a compact artwork so the text and its CTA stay
+                close at hand. When the video ends naturally it stays
+                mounted underneath, holding its last frame, while a
+                matted still of that same frame crossfades over it and
+                the greeter cat fades in inside the artwork's
+                lower-left as part of the same scene. */}
             <div
               className={`relative aspect-square ${
                 settled
@@ -242,7 +282,7 @@ export default function WelcomeGate() {
                 loading="eager"
                 decoding="async"
                 draggable={false}
-                className="gate-art-mask absolute inset-0 h-full w-full object-cover select-none"
+                className="absolute inset-0 h-full w-full object-cover select-none"
               />
               {showVideo && (
                 <video
@@ -270,11 +310,22 @@ export default function WelcomeGate() {
                     setSettledVia("still");
                     setPhase("settled");
                   }}
-                  className={`gate-art-mask absolute inset-0 h-full w-full object-cover transition-opacity duration-500 motion-reduce:transition-none ${
+                  className={`gate-video-mask absolute inset-0 h-full w-full object-cover transition-opacity duration-500 motion-reduce:transition-none ${
                     videoFaded ? "opacity-0" : "opacity-100"
                   }`}
                 />
               )}
+              {/* Settled still for the natural video path: a matted
+                  copy of the video's last frame crossfades over the
+                  ended video (which stays mounted underneath), so
+                  the final scene is pure illustration on the page
+                  background — no paper rectangle in any browser,
+                  Safari included. Poster paths never render it: the
+                  poster still is already transparent. */}
+              {settled &&
+                settledVia === "video" &&
+                !videoFaded &&
+                !videoFailed && <FinalStill />}
               {!settled && showVideo && (
                 <button
                   type="button"
@@ -287,12 +338,14 @@ export default function WelcomeGate() {
               )}
               {/* Greeter cat — only on the natural video path: the
                   stage then shows the last frame (cat on top of the
-                  globe), so this sitting cat joins the scene at the
-                  artwork's lower-left, fully visible and grounded by
-                  its own soft radial melt. On every poster path the
-                  still already contains a sitting cat — no duplicate.
-                  It fades in with the welcome text and never overlaps
-                  it (it belongs to the artwork column). */}
+                  globe), so this sitting cat joins the scene fully
+                  inside the artwork's lower-left. Its paper is matted
+                  out of the asset itself, so it grounds into the page
+                  background instead of reading as a sticker. On every
+                  poster path the still already contains a sitting
+                  cat — no duplicate. It fades in with the welcome
+                  text and never overlaps it (it belongs to the
+                  artwork column). */}
               {settled &&
                 settledVia === "video" &&
                 !videoFaded &&
@@ -307,7 +360,7 @@ export default function WelcomeGate() {
                     decoding="async"
                     draggable={false}
                     aria-hidden="true"
-                    className="gate-panel-in gate-decor-mask pointer-events-none absolute -bottom-3 -left-3 z-10 w-[92px] select-none sm:w-[110px] lg:-bottom-5 lg:-left-5 lg:w-[140px]"
+                    className="gate-panel-in pointer-events-none absolute bottom-1 left-1 z-10 w-[100px] select-none sm:bottom-2 sm:left-2 sm:w-[120px] lg:bottom-3 lg:left-3 lg:w-[150px]"
                   />
                 )}
             </div>
