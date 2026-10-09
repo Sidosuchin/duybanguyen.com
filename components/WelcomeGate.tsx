@@ -61,11 +61,16 @@ function getServerMotionSnapshot(): boolean {
  * there are no redirects — the visitor is already on the route they
  * asked for, on whichever page the gate was mounted over.
  *
- * Screen A opens with a short muted video — the orange cat orbits a
- * hand-drawn globe and lands on top of it — layered over its poster
- * still inside a framed stage. When the video ends (or is skipped, or
- * fails, or a safety timeout fires) the screen settles and the welcome
- * panel fades in below the stage.
+ * Screen A is ONE integrated editorial scene, not two boxes: the
+ * artwork (poster still, with the intro video layered on top) carries
+ * a radial edge-dissolve mask so its baked-in cream melts into the
+ * gate's page background, and once the intro settles (video end, skip,
+ * failure, or the safety timeout) the welcome text fades in beside it
+ * as a plain block floating on the same background — no stage frame,
+ * no panel card. When the video ends naturally, a small greeter cat
+ * joins the scene at the artwork's lower-left; the poster still
+ * already contains a sitting cat, so the greeter only appears on the
+ * video path (tracked via `settledVia`).
  */
 export default function WelcomeGate() {
   const { t } = useLanguage();
@@ -79,6 +84,16 @@ export default function WelcomeGate() {
   // Crossfade the video out so the poster still shows instead — used
   // by Skip and when coming back from the game (never replay).
   const [videoFaded, setVideoFaded] = useState(false);
+  // How the intro settled: "video" = the video played through to its
+  // last frame (the cat on top of the globe is what the stage shows);
+  // "still" = settled onto the poster still (skip / error). The 7s
+  // fallback leaves this null until `ended` upgrades it, and reduced
+  // motion never sets it. Only "video" renders the extra greeter cat
+  // beside the artwork — the poster already contains a sitting cat,
+  // so showing another one there would duplicate it.
+  const [settledVia, setSettledVia] = useState<"video" | "still" | null>(
+    null,
+  );
   // The video failed to load/play: drop it entirely, keep the still.
   const [videoFailed, setVideoFailed] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -140,6 +155,7 @@ export default function WelcomeGate() {
   const skipIntro = () => {
     videoRef.current?.pause();
     setVideoFaded(true);
+    setSettledVia("still");
     setPhase("settled");
   };
 
@@ -147,6 +163,7 @@ export default function WelcomeGate() {
   const backToWelcome = () => {
     videoRef.current?.pause();
     setVideoFaded(true);
+    setSettledVia("still");
     setPhase("settled");
     setScreen("welcome");
   };
@@ -189,24 +206,31 @@ export default function WelcomeGate() {
           <div
             className={`flex w-full flex-col items-center ${
               settled
-                ? "lg:mx-auto lg:max-w-[1100px] lg:flex-row lg:gap-12"
+                ? "lg:mx-auto lg:max-w-[1150px] lg:flex-row lg:items-center lg:gap-14"
                 : ""
             }`}
           >
-            {/* Intro stage — a framed square artwork: the poster still
-                underneath, the intro video layered on top of it. The
-                illustration's cream background is baked in, so in dark
-                mode the stage simply reads as a framed picture. When
-                the video ends naturally it stays visible, holding its
-                last frame (the cat on top of the globe). While the
-                intro runs, the stage sits centered on its own; once
-                settled, desktop (≥lg) reflows into one unified hero —
-                stage left (~52%), welcome panel right (~48%) — while
-                mobile keeps a single column with a compact stage so
-                the panel and its CTA stay close at hand. */}
+            {/* Intro stage — the artwork itself, unframed: the poster
+                still underneath, the intro video layered on top, both
+                carrying the .gate-art-mask radial edge-dissolve so the
+                illustration melts into the page background instead of
+                ending at a hard square edge. The mask is identical in
+                every state (intro, settled last frame, poster), so
+                nothing jumps when states change. While the intro runs
+                the artwork sits centered on its own; once settled,
+                desktop (≥lg) reflows into the hero — artwork left
+                (~54%), welcome text right (~46%) — while mobile keeps
+                a single column with a compact artwork so the text and
+                its CTA stay close at hand. When the video ends
+                naturally it stays visible, holding its last frame
+                (the cat on top of the globe), and the greeter cat
+                fades in at the artwork's lower-left as part of the
+                same scene. */}
             <div
-              className={`relative aspect-square overflow-hidden rounded-2xl border border-line bg-cream shadow-[0_18px_50px_rgba(22,18,15,0.1)] ${
-                settled ? "w-[min(78vw,340px)] lg:w-[52%]" : "w-[min(88vw,520px)]"
+              className={`relative aspect-square ${
+                settled
+                  ? "w-[min(78vw,340px)] lg:w-[54%] lg:max-w-[560px]"
+                  : "w-[min(88vw,520px)]"
               }`}
             >
               {/* eslint-disable-next-line @next/next/no-img-element -- static poster asset, same pattern as the other gate artwork */}
@@ -218,7 +242,7 @@ export default function WelcomeGate() {
                 loading="eager"
                 decoding="async"
                 draggable={false}
-                className="absolute inset-0 h-full w-full object-cover select-none"
+                className="gate-art-mask absolute inset-0 h-full w-full object-cover select-none"
               />
               {showVideo && (
                 <video
@@ -237,12 +261,16 @@ export default function WelcomeGate() {
                   preload="auto"
                   aria-hidden="true"
                   tabIndex={-1}
-                  onEnded={() => setPhase("settled")}
-                  onError={() => {
-                    setVideoFailed(true);
+                  onEnded={() => {
+                    setSettledVia("video");
                     setPhase("settled");
                   }}
-                  className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-500 motion-reduce:transition-none ${
+                  onError={() => {
+                    setVideoFailed(true);
+                    setSettledVia("still");
+                    setPhase("settled");
+                  }}
+                  className={`gate-art-mask absolute inset-0 h-full w-full object-cover transition-opacity duration-500 motion-reduce:transition-none ${
                     videoFaded ? "opacity-0" : "opacity-100"
                   }`}
                 />
@@ -257,65 +285,76 @@ export default function WelcomeGate() {
                   {w.skipIntro}
                 </button>
               )}
+              {/* Greeter cat — only on the natural video path: the
+                  stage then shows the last frame (cat on top of the
+                  globe), so this sitting cat joins the scene at the
+                  artwork's lower-left, fully visible and grounded by
+                  its own soft radial melt. On every poster path the
+                  still already contains a sitting cat — no duplicate.
+                  It fades in with the welcome text and never overlaps
+                  it (it belongs to the artwork column). */}
+              {settled &&
+                settledVia === "video" &&
+                !videoFaded &&
+                !videoFailed && (
+                  // eslint-disable-next-line @next/next/no-img-element -- static decorative asset, same pattern as the other gate artwork
+                  <img
+                    src="/images/panel-cat.webp"
+                    alt=""
+                    width={480}
+                    height={480}
+                    loading="eager"
+                    decoding="async"
+                    draggable={false}
+                    aria-hidden="true"
+                    className="gate-panel-in gate-decor-mask pointer-events-none absolute -bottom-3 -left-3 z-10 w-[92px] select-none sm:w-[110px] lg:-bottom-5 lg:-left-5 lg:w-[140px]"
+                  />
+                )}
             </div>
 
-            {/* Welcome panel — appears once the intro settles, as the
+            {/* Welcome text — appears once the intro settles, as the
                 right column of the desktop hero (below the compact
-                stage on mobile). Storyboard frames 4–5: the sitting
-                cat tucks into the panel's bottom-left corner, faded
-                in with a soft radial mask and kept clear of the text
-                by the panel padding. The heading carries no border or
-                outline of any kind — the panel's only border is its
-                hairline neutral border-line. */}
+                artwork on mobile). It is a plain text block floating
+                directly on the gate's page background: no card, no
+                surface, no border, no shadow — the artwork and the
+                words share one canvas, one scene. Desktop left-aligns
+                it against the artwork; mobile centers it. The heading
+                carries no border or outline of any kind. */}
             {settled && (
-              <div className="gate-panel-in relative mt-6 w-full max-w-[600px] rounded-2xl border border-line bg-panel px-6 pt-10 pb-16 text-center shadow-[0_18px_50px_rgba(22,18,15,0.08)] sm:px-12 sm:pt-12 sm:pb-[4.5rem] lg:mt-0 lg:w-[48%] lg:max-w-none">
-                {/* eslint-disable-next-line @next/next/no-img-element -- static decorative asset, same pattern as the other gate artwork */}
-                <img
-                  src="/images/panel-cat.webp"
-                  alt=""
-                  width={480}
-                  height={480}
-                  loading="eager"
-                  decoding="async"
-                  draggable={false}
-                  aria-hidden="true"
-                  className="gate-decor-mask pointer-events-none absolute -bottom-9 left-2 w-[92px] select-none sm:w-[120px] lg:-left-8 lg:w-[132px]"
-                />
-                <div className="relative">
-                  <p className="text-xs font-semibold tracking-[0.24em] text-terracotta uppercase">
-                    {w.label}
-                  </p>
-                  <h2
-                    data-gate-heading
-                    tabIndex={-1}
-                    className="mt-4 font-display text-4xl font-bold tracking-tight outline-none sm:text-5xl"
+              <div className="gate-panel-in relative mt-8 w-full max-w-[600px] text-center lg:mt-0 lg:w-[46%] lg:max-w-none lg:text-left">
+                <p className="text-xs font-semibold tracking-[0.24em] text-terracotta uppercase">
+                  {w.label}
+                </p>
+                <h2
+                  data-gate-heading
+                  tabIndex={-1}
+                  className="mt-4 font-display text-4xl font-bold tracking-tight outline-none sm:text-5xl"
+                >
+                  {w.heading}
+                </h2>
+                <p className="mx-auto mt-5 max-w-md text-base leading-relaxed text-muted sm:text-lg lg:mx-0">
+                  {w.description}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setScreen("game")}
+                  className="group mt-9 inline-flex items-center gap-2 rounded-full bg-charcoal px-8 py-3.5 text-[15px] font-semibold text-paper transition duration-300 hover:-translate-y-0.5 hover:bg-terracotta motion-reduce:hover:translate-y-0"
+                >
+                  {w.start}
+                  <svg
+                    aria-hidden="true"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1 motion-reduce:transition-none motion-reduce:group-hover:translate-x-0"
                   >
-                    {w.heading}
-                  </h2>
-                  <p className="mx-auto mt-5 max-w-md text-base leading-relaxed text-muted sm:text-lg">
-                    {w.description}
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => setScreen("game")}
-                    className="group mt-9 inline-flex items-center gap-2 rounded-full bg-charcoal px-8 py-3.5 text-[15px] font-semibold text-paper transition duration-300 hover:-translate-y-0.5 hover:bg-terracotta motion-reduce:hover:translate-y-0"
-                  >
-                    {w.start}
-                    <svg
-                      aria-hidden="true"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1 motion-reduce:transition-none motion-reduce:group-hover:translate-x-0"
-                    >
-                      <path d="M4 12h16m-6-6 6 6-6 6" />
-                    </svg>
-                  </button>
-                  <p className="mt-5 text-sm text-muted">{w.supporting}</p>
-                </div>
+                    <path d="M4 12h16m-6-6 6 6-6 6" />
+                  </svg>
+                </button>
+                <p className="mt-5 text-sm text-muted">{w.supporting}</p>
               </div>
             )}
           </div>

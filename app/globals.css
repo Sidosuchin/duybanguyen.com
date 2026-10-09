@@ -192,8 +192,8 @@ html[data-welcome="locked"] body {
   }
 }
 
-/* The panel fades in once the intro settles (video end, skip, or the
-   safety fallback); it is only rendered from that moment on. */
+/* The welcome block fades in once the intro settles (video end, skip,
+   or the safety fallback); it is only rendered from that moment on. */
 .gate-panel-in {
   animation: gate-panel-in 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.15s both;
 }
@@ -204,10 +204,36 @@ html[data-welcome="locked"] body {
 }
 
 /*
- * Soft radial fade for the welcome panel's decorative illustrations
- * (sitting cat, coffee-and-books still life). The crops carry the
- * illustration's baked-in cream background, so their edges are masked
- * out radially and melt into the panel surface in both themes.
+ * Edge-dissolve for the welcome artwork (poster still + intro video).
+ * The illustration's cream background is baked in, so instead of a
+ * framed rectangle the artwork itself is masked with a large radial
+ * gradient and melts into the gate's page background — one continuous
+ * scene in both themes (a soft vignette on dark). The gradient is
+ * deliberately wide and its solid core generous: the globe, the city,
+ * the orbit ring, the poster's sitting cat (bottom-left) and the
+ * video's cat on top of the globe all sit far from the corners and
+ * stay solid and legible, while the artwork's outer cream corners and
+ * leaf decorations dissolve away.
+ */
+.gate-art-mask {
+  -webkit-mask-image: radial-gradient(
+    130% 130% at 50% 46%,
+    black 65%,
+    transparent 92%
+  );
+  mask-image: radial-gradient(
+    130% 130% at 50% 46%,
+    black 65%,
+    transparent 92%
+  );
+}
+
+/*
+ * Soft radial melt for the greeter cat that joins the scene beside
+ * the artwork once the intro video ends. The crop carries the
+ * illustration's baked-in cream background, so its edges are masked
+ * out radially and the cat grounds into the page background instead
+ * of reading as a sticker, in both themes.
  */
 .gate-decor-mask {
   -webkit-mask-image: radial-gradient(
