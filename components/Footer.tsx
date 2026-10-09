@@ -10,15 +10,16 @@ export default function Footer() {
   const { lang, t } = useLanguage();
 
   return (
-    <footer className="bg-charcoal text-paper">
-      <div className="mx-auto max-w-[1240px] px-5 py-14 sm:px-8 sm:py-16">
+    <footer className="bg-night text-night-text">
+      {/* Extra bottom padding: clearance for the floating cat toggle */}
+      <div className="mx-auto max-w-[1240px] px-5 pt-14 pb-28 sm:px-8 sm:pt-16 sm:pb-24">
         <div className="grid gap-12 md:grid-cols-[1.5fr_1fr_1fr]">
           <div>
             <p className="font-display text-2xl font-extrabold tracking-tight">
               {site.name}
               <span className="text-terracotta-light">.</span>
             </p>
-            <p className="mt-3 max-w-sm text-[15px] leading-relaxed text-paper/65">
+            <p className="mt-3 max-w-sm text-[15px] leading-relaxed text-night-text/65">
               {pick(site.tagline, lang)}
             </p>
             <SocialLinks className="mt-7" tone="dark" />
@@ -32,7 +33,7 @@ export default function Footer() {
                 <li key={route.href}>
                   <Link
                     href={route.href}
-                    className="link-underline text-[15px] text-paper/80 transition-colors hover:text-paper"
+                    className="link-underline text-[15px] text-night-text/80 transition-colors hover:text-night-text"
                   >
                     {t.nav[route.key]}
                   </Link>
@@ -41,7 +42,7 @@ export default function Footer() {
               <li>
                 <Link
                   href="/lien-he"
-                  className="link-underline text-[15px] text-paper/80 transition-colors hover:text-paper"
+                  className="link-underline text-[15px] text-night-text/80 transition-colors hover:text-night-text"
                 >
                   {t.nav.contact}
                 </Link>
@@ -52,7 +53,7 @@ export default function Footer() {
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-fog">
               {t.footer.connectTitle}
             </p>
-            <p className="mt-5 text-[15px] leading-relaxed text-paper/75">
+            <p className="mt-5 text-[15px] leading-relaxed text-night-text/75">
               {t.footer.blurb}
             </p>
             <Link

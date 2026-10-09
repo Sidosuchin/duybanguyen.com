@@ -25,7 +25,7 @@ export default function ImagePanel({
       aria-label={ariaLabel}
       className={`flex items-center justify-center overflow-hidden ${
         dark
-          ? "dot-grid-dark bg-ink text-paper"
+          ? "dot-grid-dark bg-ink text-night-text"
           : "dot-grid bg-cream text-charcoal"
       } ${className}`}
     >
@@ -33,7 +33,7 @@ export default function ImagePanel({
         <span
           aria-hidden="true"
           className={`font-display text-6xl font-extrabold tracking-tight sm:text-7xl ${
-            dark ? "text-paper/25" : "text-charcoal/20"
+            dark ? "text-night-text/25" : "text-charcoal/20"
           }`}
         >
           {monogram}

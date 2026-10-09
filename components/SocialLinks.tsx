@@ -33,7 +33,7 @@ export default function SocialLinks({
               rel={s.url.startsWith("http") ? "noopener noreferrer" : undefined}
               className={`inline-block rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
                 dark
-                  ? "border-line-dark text-paper/85 hover:border-terracotta-light hover:text-terracotta-light"
+                  ? "border-line-dark text-night-text/85 hover:border-terracotta-light hover:text-terracotta-light"
                   : "border-line bg-paper hover:border-terracotta hover:text-terracotta"
               }`}
             >

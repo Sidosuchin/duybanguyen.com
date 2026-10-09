@@ -4,6 +4,8 @@ import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { LanguageProvider } from "@/components/LanguageProvider";
+import { ThemeProvider } from "@/components/ThemeProvider";
+import CatToggle from "@/components/CatToggle";
 import SkipLink from "@/components/SkipLink";
 import { site } from "@/data/site";
 import { pick } from "@/lib/i18n";
@@ -64,22 +66,39 @@ const personJsonLd = {
   knowsLanguage: ["vi", "en"],
 };
 
+/**
+ * Runs synchronously while the HTML is parsed — before first paint — so
+ * a returning visitor with dark mode saved never sees a light flash.
+ * Mirrors the "dbn-theme" key ThemeProvider reads after hydration.
+ */
+const themeInitScript = `(function(){try{if(window.localStorage.getItem("dbn-theme")==="dark"){document.documentElement.classList.add("dark")}}catch(e){}})();`;
+
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="vi" className={`${jakarta.variable} ${inter.variable}`}>
+    <html
+      lang="vi"
+      className={`${jakarta.variable} ${inter.variable}`}
+      suppressHydrationWarning
+    >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+      </head>
       <body className="flex min-h-screen flex-col bg-paper font-body text-charcoal antialiased">
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(personJsonLd) }}
         />
-        <LanguageProvider>
-          <SkipLink />
-          <Navbar />
-          <main id="main" className="flex-1">
-            {children}
-          </main>
-          <Footer />
-        </LanguageProvider>
+        <ThemeProvider>
+          <LanguageProvider>
+            <SkipLink />
+            <Navbar />
+            <main id="main" className="flex-1">
+              {children}
+            </main>
+            <Footer />
+            <CatToggle />
+          </LanguageProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

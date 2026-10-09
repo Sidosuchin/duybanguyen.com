@@ -45,6 +45,10 @@ const vi = {
     contact: "Liên hệ",
     connect: "Connect",
   },
+  theme: {
+    toggleToDark: "Chuyển sang chế độ tối",
+    toggleToLight: "Chuyển sang chế độ sáng",
+  },
   hero: {
     greeting: "Xin chào, mình là Duy.",
     live: "Mình sống",
@@ -247,6 +251,10 @@ const en: Dictionary = {
     shop: "Shop",
     contact: "Contact",
     connect: "Connect",
+  },
+  theme: {
+    toggleToDark: "Switch to dark mode",
+    toggleToLight: "Switch to light mode",
   },
   hero: {
     greeting: "Hello, I'm Duy.",

@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   /* Brand palette — Modern Personal / Editorial (Terracotta accent) */
   --color-paper: #faf6f0; /* warm cream background */
@@ -15,6 +17,11 @@
   --color-fog: #a89f96; /* tertiary text on dark surfaces */
   --color-line: #e6ddd0; /* subtle 1px borders */
   --color-line-dark: #3a332d; /* borders on dark surfaces */
+  /* Always-dark surfaces (footer, editorial bands, dark panels).
+     These do NOT flip with the theme: `night` is their background and
+     `night-text` their foreground in both light and dark mode. */
+  --color-night: #211d1a;
+  --color-night-text: #faf6f0;
 
   --font-display: "Plus Jakarta Sans", "Inter", ui-sans-serif, system-ui,
     sans-serif;
@@ -36,6 +43,36 @@ body {
 ::selection {
   background: var(--color-terracotta);
   color: #fff;
+}
+
+/*
+ * Dark theme — the same design tokens with after-dark values, so every
+ * utility built on them (bg-paper, text-charcoal, border-line…) flips
+ * at once. Terracotta, terracotta-light, fog, line-dark and ink stay
+ * constant: they were designed for dark surfaces already. `night`
+ * deepens slightly so always-dark bands stay distinct from the page.
+ */
+.dark {
+  color-scheme: dark;
+  --color-paper: #1d1917; /* warm deep charcoal page background */
+  --color-cream: #2b241e; /* raised surface */
+  --color-cream-soft: #241e1a; /* in-between surface for alternating sections */
+  --color-charcoal: #f5efe6; /* primary text — warm cream */
+  --color-muted: #b3a696; /* secondary text */
+  --color-line: #3d342b; /* subtle 1px borders */
+  --color-night: #14100d; /* always-dark surfaces sink below the page */
+}
+
+/* Gentle cross-fade of the main surfaces when the theme flips */
+body,
+header,
+footer,
+main,
+section {
+  transition:
+    background-color 0.35s ease,
+    border-color 0.35s ease,
+    color 0.35s ease;
 }
 
 /* Visible, consistent keyboard focus */

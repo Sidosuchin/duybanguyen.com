@@ -20,11 +20,11 @@ export default function LanguageSwitcher({
 
   const base =
     tone === "dark"
-      ? "border-white/25 text-paper/70"
+      ? "border-white/25 text-night-text/70"
       : "border-line text-muted";
   const active =
     tone === "dark"
-      ? "bg-paper text-charcoal"
+      ? "bg-night-text text-night"
       : "bg-charcoal text-paper";
 
   return (

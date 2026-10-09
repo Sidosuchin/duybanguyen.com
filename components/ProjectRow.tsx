@@ -69,7 +69,7 @@ export default function ProjectRow({
         {meta && (
           <p
             className={`mt-2 text-sm sm:text-[15px] ${
-              dark ? "text-paper/60" : "text-muted"
+              dark ? "text-night-text/60" : "text-muted"
             }`}
           >
             {meta}
