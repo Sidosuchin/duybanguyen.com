@@ -1,28 +1,37 @@
+import { lt, type LocalizedList, type LocalizedText } from "@/lib/i18n";
+
 export type Post = {
-  title: string;
+  title: LocalizedText;
   slug: string;
+  /** id của một chuyên mục trong postCategories */
   category: string;
-  excerpt: string;
+  excerpt: LocalizedText;
   /** ISO date string, ví dụ "2026-10-07" */
   date: string;
-  readingTime: string;
+  readingTime: LocalizedText;
   /** image path under /public — null = chưa có ảnh bìa */
   cover: string | null;
-  /** body paragraphs — markdown đơn giản */
-  body: string[];
+  /** body paragraphs */
+  body: LocalizedList;
 };
 
-export const postCategories = [
-  "Business",
-  "Marketing",
-  "Technology",
-  "Learning",
-  "Life",
-  "Personal thoughts",
-] as const;
+export const postCategories: { id: string; label: LocalizedText }[] = [
+  { id: "business", label: lt("Business", "Business") },
+  { id: "marketing", label: lt("Marketing", "Marketing") },
+  { id: "technology", label: lt("Technology", "Technology") },
+  { id: "learning", label: lt("Learning", "Learning") },
+  { id: "life", label: lt("Life", "Life") },
+  { id: "personal-thoughts", label: lt("Suy nghĩ cá nhân", "Personal thoughts") },
+];
+
+export function categoryLabel(id: string): LocalizedText {
+  return (
+    postCategories.find((c) => c.id === id)?.label ?? lt(id, id)
+  );
+}
 
 /**
- * Chưa có bài viết thật — section Notes hiển thị trạng thái placeholder
+ * Chưa có bài viết thật — section Notes hiển thị trạng thái trung tính
  * cho đến khi Duy gửi bài đầu tiên. Không bịa bài viết.
  */
 export const posts: Post[] = [];

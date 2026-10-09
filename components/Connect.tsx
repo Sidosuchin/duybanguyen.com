@@ -1,29 +1,36 @@
+"use client";
+
 import Link from "next/link";
 import Reveal from "./Reveal";
 import SocialLinks from "./SocialLinks";
+import { useLanguage } from "./LanguageProvider";
 
 export default function Connect() {
+  const { t } = useLanguage();
+
   return (
-    <section aria-label="Kết nối" className="border-t border-line">
-      <div className="mx-auto max-w-[1200px] px-5 py-14 text-center sm:px-8 sm:py-24">
+    <section aria-label={t.sections.connect.eyebrow}>
+      <div className="mx-auto max-w-[1240px] px-5 py-16 text-center sm:px-8 sm:py-28">
         <Reveal>
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-terracotta">
-            Connect
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-terracotta">
+            {t.sections.connect.eyebrow}
           </p>
-          <h2 className="mx-auto mt-3 max-w-2xl font-display text-3xl font-bold tracking-tight sm:text-4xl">
-            Kết nối với mình nhé
+          <h2 className="mx-auto mt-4 max-w-2xl font-display text-4xl font-extrabold tracking-tight sm:text-5xl">
+            {t.sections.connect.title}
+            <span className="text-terracotta">.</span>
           </h2>
-          <p className="mx-auto mt-4 max-w-xl text-base leading-relaxed text-muted sm:text-lg">
-            Muốn hợp tác, mời cà phê, hay chỉ đơn giản là chào nhau một câu —
-            mình luôn vui khi quen thêm bạn mới.
+          <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-muted sm:text-lg">
+            {t.sections.connect.text}
           </p>
-          <SocialLinks className="mt-8 justify-center" />
-          <Link
-            href="/lien-he"
-            className="mt-8 inline-block rounded-lg bg-terracotta px-6 py-3 text-[15px] font-semibold text-white transition-colors hover:bg-terracotta-deep"
-          >
-            Tới trang liên hệ
-          </Link>
+          <SocialLinks className="mt-9 justify-center" />
+          <div className="mt-9">
+            <Link
+              href="/lien-he"
+              className="inline-block rounded-lg bg-terracotta px-7 py-3.5 text-[15px] font-semibold text-white transition-colors hover:bg-terracotta-deep"
+            >
+              {t.sections.connect.cta}
+            </Link>
+          </div>
         </Reveal>
       </div>
     </section>

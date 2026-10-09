@@ -1,19 +1,26 @@
+"use client";
+
 import Link from "next/link";
+import Image from "next/image";
 import Reveal from "./Reveal";
 import SectionHeading from "./SectionHeading";
-import ContentPlaceholder from "./ContentPlaceholder";
-import { products, shopIntro, shopTeaserNote } from "@/data/products";
+import ImagePanel from "./ImagePanel";
+import { useLanguage } from "./LanguageProvider";
+import { products, shopIntro } from "@/data/products";
+import { pick } from "@/lib/i18n";
 
 const teaserProducts = products.slice(0, 3);
 
 export default function ShopTeaser() {
+  const { lang, t } = useLanguage();
+
   return (
-    <section aria-label="Cửa hàng" className="border-t border-line bg-cream/50">
-      <div className="mx-auto max-w-[1200px] px-5 py-14 sm:px-8 sm:py-20">
+    <section aria-label={t.sections.shop.title} className="bg-cream-soft">
+      <div className="mx-auto max-w-[1240px] px-5 py-16 sm:px-8 sm:py-24">
         <SectionHeading
-          eyebrow="Shop"
-          title="My Shop"
-          description={shopIntro}
+          eyebrow={t.sections.shop.eyebrow}
+          title={t.sections.shop.title}
+          description={pick(shopIntro, lang)}
         />
         {teaserProducts.length > 0 ? (
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -21,19 +28,31 @@ export default function ShopTeaser() {
               <Reveal key={product.slug} delay={i * 80}>
                 <Link
                   href={`/shop/${product.slug}`}
-                  className="group block h-full rounded-2xl border border-line bg-paper p-5 transition-colors hover:border-terracotta/50"
+                  className="group block h-full rounded-xl border border-line bg-paper p-5 transition-colors hover:border-terracotta/50"
                 >
-                  <div className="flex aspect-[4/3] items-center justify-center rounded-xl bg-cream text-sm text-muted">
-                    [Ảnh sản phẩm]
-                  </div>
+                  {product.image ? (
+                    <Image
+                      src={product.image}
+                      alt={product.name}
+                      width={800}
+                      height={600}
+                      className="aspect-[4/3] w-full rounded-lg object-cover"
+                    />
+                  ) : (
+                    <ImagePanel
+                      ariaLabel={t.sections.shop.productPhoto}
+                      monogram={product.name.charAt(0)}
+                      className="aspect-[4/3] w-full rounded-lg"
+                    />
+                  )}
                   <h3 className="mt-4 font-display text-lg font-bold transition-colors group-hover:text-terracotta">
                     {product.name}
                   </h3>
                   <p className="mt-1.5 line-clamp-2 text-sm text-muted">
-                    {product.description}
+                    {pick(product.description, lang)}
                   </p>
                   <p className="mt-3 font-display font-bold text-terracotta">
-                    {product.price ?? "—"}
+                    {product.price ?? t.sections.shop.comingSoon}
                   </p>
                 </Link>
               </Reveal>
@@ -41,20 +60,23 @@ export default function ShopTeaser() {
           </div>
         ) : (
           <Reveal>
-            <ContentPlaceholder
-              label="[CONTENT PLACEHOLDER]"
-              note="Chưa có sản phẩm thật. Chỉ cần cho mình biết định bán gì (vật lý / số / gợi ý liên kết) — chi tiết ở Phase 6."
-              className="py-12"
-            />
+            <div className="rounded-xl border border-line bg-paper px-6 py-12 text-center sm:py-16">
+              <p className="mx-auto max-w-md font-display text-xl font-bold leading-snug sm:text-2xl">
+                {t.sections.shop.comingSoon}
+                <span className="text-terracotta">.</span>
+              </p>
+              <p className="mx-auto mt-3 max-w-md text-[15px] leading-relaxed text-muted">
+                {pick(shopIntro, lang)}
+              </p>
+            </div>
           </Reveal>
         )}
         <Reveal>
-          <p className="mt-6 text-sm text-muted">{shopTeaserNote}</p>
           <Link
             href="/shop"
-            className="link-underline mt-4 inline-block font-medium text-terracotta"
+            className="link-underline mt-9 inline-block font-medium text-terracotta"
           >
-            Vào Shop →
+            {t.sections.shop.viewAll} →
           </Link>
         </Reveal>
       </div>

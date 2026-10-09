@@ -2,11 +2,16 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { navLinks, site } from "@/data/site";
+import { usePathname } from "next/navigation";
+import { navRoutes, site } from "@/data/site";
+import { useLanguage } from "./LanguageProvider";
+import LanguageSwitcher from "./LanguageSwitcher";
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
+  const pathname = usePathname();
+  const { t } = useLanguage();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -31,6 +36,9 @@ export default function Navbar() {
     };
   }, [open ]);
 
+  const isActive = (href: string) =>
+    pathname === href || (href !== "/" && pathname.startsWith(`${href}/`));
+
   return (
     <header
       className={`sticky top-0 z-50 transition-colors duration-300 ${
@@ -40,8 +48,8 @@ export default function Navbar() {
       }`}
     >
       <nav
-        aria-label="Điều hướng chính"
-        className="mx-auto flex h-16 max-w-[1200px] items-center justify-between px-5 sm:px-8"
+        aria-label={t.a11y.mainNav}
+        className="mx-auto flex h-16 max-w-[1240px] items-center justify-between gap-4 px-5 sm:px-8"
       >
         <Link
           href="/"
@@ -49,68 +57,78 @@ export default function Navbar() {
           className="font-display text-lg font-extrabold tracking-tight"
         >
           {site.name}
+          <span className="text-terracotta">.</span>
         </Link>
 
-        <ul className="hidden items-center gap-7 md:flex">
-          {navLinks.map((link) => (
-            <li key={link.href}>
+        <ul className="hidden items-center gap-7 lg:flex">
+          {navRoutes.map((route) => (
+            <li key={route.href}>
               <Link
-                href={link.href}
-                className="link-underline text-[15px] font-medium text-charcoal/80 transition-colors hover:text-charcoal"
+                href={route.href}
+                aria-current={isActive(route.href) ? "page" : undefined}
+                className={`link-underline text-[15px] font-medium transition-colors ${
+                  isActive(route.href)
+                    ? "text-terracotta"
+                    : "text-charcoal/75 hover:text-charcoal"
+                }`}
               >
-                {link.label}
+                {t.nav[route.key]}
               </Link>
             </li>
           ))}
-          <li>
-            <Link
-              href="/lien-he"
-              className="rounded-lg bg-terracotta px-4 py-2 text-[15px] font-semibold text-white transition-colors hover:bg-terracotta-deep"
-            >
-              Connect
-            </Link>
-          </li>
         </ul>
 
-        <button
-          type="button"
-          onClick={() => setOpen((v) => !v)}
-          aria-expanded={open}
-          aria-controls="mobile-menu"
-          aria-label={open ? "Đóng menu" : "Mở menu"}
-          className="flex h-10 w-10 items-center justify-center rounded-lg border border-line md:hidden"
-        >
-          <span aria-hidden="true" className="relative block h-4 w-5">
-            <span
-              className={`absolute left-0 top-0 h-0.5 w-5 bg-charcoal transition-transform duration-300 ${
-                open ? "translate-y-[7px] rotate-45" : ""
-              }`}
-            />
-            <span
-              className={`absolute left-0 top-[7px] h-0.5 w-5 bg-charcoal transition-opacity duration-300 ${
-                open ? "opacity-0" : ""
-              }`}
-            />
-            <span
-              className={`absolute left-0 top-[14px] h-0.5 w-5 bg-charcoal transition-transform duration-300 ${
-                open ? "-translate-y-[7px] -rotate-45" : ""
-              }`}
-            />
-          </span>
-        </button>
+        <div className="flex items-center gap-3">
+          <LanguageSwitcher />
+          <Link
+            href="/lien-he"
+            className="hidden rounded-lg bg-terracotta px-4 py-2 text-[15px] font-semibold text-white transition-colors hover:bg-terracotta-deep sm:inline-block"
+          >
+            {t.nav.connect}
+          </Link>
+          <button
+            type="button"
+            onClick={() => setOpen((v) => !v)}
+            aria-expanded={open}
+            aria-controls="mobile-menu"
+            aria-label={open ? t.a11y.closeMenu : t.a11y.openMenu}
+            className="flex h-10 w-10 items-center justify-center rounded-lg border border-line lg:hidden"
+          >
+            <span aria-hidden="true" className="relative block h-4 w-5">
+              <span
+                className={`absolute left-0 top-0 h-0.5 w-5 bg-charcoal transition-transform duration-300 ${
+                  open ? "translate-y-[7px] rotate-45" : ""
+                }`}
+              />
+              <span
+                className={`absolute left-0 top-[7px] h-0.5 w-5 bg-charcoal transition-opacity duration-300 ${
+                  open ? "opacity-0" : ""
+                }`}
+              />
+              <span
+                className={`absolute left-0 top-[14px] h-0.5 w-5 bg-charcoal transition-transform duration-300 ${
+                  open ? "-translate-y-[7px] -rotate-45" : ""
+                }`}
+              />
+            </span>
+          </button>
+        </div>
       </nav>
 
       {open && (
-        <div id="mobile-menu" className="border-t border-line md:hidden">
+        <div id="mobile-menu" className="border-t border-line lg:hidden">
           <ul className="space-y-1 px-5 py-4">
-            {navLinks.map((link) => (
-              <li key={link.href}>
+            {navRoutes.map((route) => (
+              <li key={route.href}>
                 <Link
-                  href={link.href}
+                  href={route.href}
                   onClick={() => setOpen(false)}
-                  className="block rounded-lg px-3 py-3 font-display text-xl font-bold tracking-tight transition-colors hover:bg-cream"
+                  aria-current={isActive(route.href) ? "page" : undefined}
+                  className={`block rounded-lg px-3 py-3 font-display text-xl font-bold tracking-tight transition-colors hover:bg-cream ${
+                    isActive(route.href) ? "text-terracotta" : ""
+                  }`}
                 >
-                  {link.label}
+                  {t.nav[route.key]}
                 </Link>
               </li>
             ))}
@@ -120,7 +138,7 @@ export default function Navbar() {
                 onClick={() => setOpen(false)}
                 className="block rounded-lg bg-terracotta px-4 py-3 text-center font-display text-xl font-bold text-white transition-colors hover:bg-terracotta-deep"
               >
-                Connect
+                {t.nav.connect}
               </Link>
             </li>
           </ul>

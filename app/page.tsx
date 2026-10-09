@@ -8,10 +8,11 @@ import NotesPreview from "@/components/NotesPreview";
 import ShopTeaser from "@/components/ShopTeaser";
 import Connect from "@/components/Connect";
 import { site } from "@/data/site";
+import { pick } from "@/lib/i18n";
 
 export const metadata: Metadata = {
   title: "Duy Ba Nguyen — Sống · Làm · Khám phá",
-  description: site.description,
+  description: pick(site.description, "vi"),
   alternates: { canonical: "/" },
 };
 

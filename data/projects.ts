@@ -1,44 +1,51 @@
+import { lt, type LocalizedList, type LocalizedText } from "@/lib/i18n";
+
 export type Project = {
   name: string;
   slug: string;
-  role: string;
-  category: string;
+  role: LocalizedText;
+  category: LocalizedText;
   year: string | null;
-  summary: string;
-  context: string;
-  problem: string;
-  whatIDid: string[];
-  tools: string[];
-  result: string;
-  lessons: string[];
-  /** image paths under /public — null entries render as placeholders */
+  summary: LocalizedText;
+  context: LocalizedText;
+  problem: LocalizedText;
+  whatIDid: LocalizedList;
+  tools: LocalizedList;
+  result: LocalizedText;
+  lessons: LocalizedList;
+  /** image paths under /public — null entries render as editorial panels */
   images: (string | null)[];
   /** Chỉ điền khi có số liệu thật đã được Duy xác nhận */
-  metrics?: { label: string; value: string }[];
+  metrics?: { label: LocalizedText; value: string }[];
   /**
    * true = đây là MẪU BỐ CỤC để xem cấu trúc case study,
-   * KHÔNG phải project/nội dung thật. UI phải gắn nhãn rõ ràng.
+   * KHÔNG phải project/nội dung thật. UI luôn gắn nhãn rõ ràng.
    */
   isSample?: boolean;
 };
 
-const PH = "[CONTENT PLACEHOLDER]";
+const sampleNote = lt(
+  "Nội dung mẫu trung tính để xem bố cục — sẽ được thay bằng case study thật.",
+  "Neutral sample copy to preview the layout — to be replaced with a real case study."
+);
 
 export const projects: Project[] = [
   {
     name: "BAMOS COFFEE & TEA",
     slug: "bamos-coffee-tea",
-    role: PH,
-    category: PH,
+    role: sampleNote,
+    category: sampleNote,
     year: null,
-    summary:
-      "MẪU BỐ CỤC — đây chỉ là khung trình bày case study, chưa phải nội dung thật. Mọi trường bên dưới đang chờ Duy cung cấp.",
-    context: PH,
-    problem: PH,
-    whatIDid: [PH],
-    tools: [PH],
-    result: PH,
-    lessons: [PH],
+    summary: lt(
+      "Mẫu bố cục case study — khung trình bày gồm bối cảnh, vấn đề, việc đã làm, công cụ, kết quả và điều học được. Nội dung thật sẽ được cập nhật tại đây.",
+      "Case-study layout sample — a frame covering context, problem, what was done, tools, results and lessons. Real content will live here."
+    ),
+    context: sampleNote,
+    problem: sampleNote,
+    whatIDid: { vi: [sampleNote.vi], en: [sampleNote.en] },
+    tools: { vi: [sampleNote.vi], en: [sampleNote.en] },
+    result: sampleNote,
+    lessons: { vi: [sampleNote.vi], en: [sampleNote.en] },
     images: [null, null],
     isSample: true,
   },

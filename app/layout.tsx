@@ -3,7 +3,10 @@ import { Plus_Jakarta_Sans, Inter } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { LanguageProvider } from "@/components/LanguageProvider";
+import SkipLink from "@/components/SkipLink";
 import { site } from "@/data/site";
+import { pick } from "@/lib/i18n";
 
 const jakarta = Plus_Jakarta_Sans({
   variable: "--font-display",
@@ -20,6 +23,9 @@ const inter = Inter({
 });
 
 const defaultTitle = "Duy Ba Nguyen — Sống · Làm · Khám phá";
+// Metadata is rendered on the server, where Vietnamese (the default
+// language) applies. The in-page UI switches language client-side.
+const defaultDescription = pick(site.description, "vi");
 
 export const metadata: Metadata = {
   metadataBase: new URL(site.domain),
@@ -27,7 +33,7 @@ export const metadata: Metadata = {
     default: defaultTitle,
     template: "%s · Duy Ba Nguyen",
   },
-  description: site.description,
+  description: defaultDescription,
   alternates: {
     canonical: "/",
   },
@@ -37,12 +43,12 @@ export const metadata: Metadata = {
     url: site.domain,
     siteName: site.name,
     title: defaultTitle,
-    description: site.description,
+    description: defaultDescription,
   },
   twitter: {
     card: "summary_large_image",
     title: defaultTitle,
-    description: site.description,
+    description: defaultDescription,
   },
   robots: {
     index: true,
@@ -66,17 +72,14 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(personJsonLd) }}
         />
-        <a
-          href="#main"
-          className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[60] focus:rounded-lg focus:bg-charcoal focus:px-4 focus:py-2 focus:text-paper"
-        >
-          Bỏ qua tới nội dung chính
-        </a>
-        <Navbar />
-        <main id="main" className="flex-1">
-          {children}
-        </main>
-        <Footer />
+        <LanguageProvider>
+          <SkipLink />
+          <Navbar />
+          <main id="main" className="flex-1">
+            {children}
+          </main>
+          <Footer />
+        </LanguageProvider>
       </body>
     </html>
   );
