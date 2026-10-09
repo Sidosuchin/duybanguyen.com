@@ -5,6 +5,7 @@ import {
   useRef,
   useState,
   useSyncExternalStore,
+  type CSSProperties,
   type KeyboardEvent,
 } from "react";
 import { useLanguage } from "./LanguageProvider";
@@ -139,6 +140,10 @@ export default function WelcomeGate() {
   const [videoFailed, setVideoFailed] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  // Greeter cat stack + the Start CTA — the two ends of the tail-wag
+  // proximity system below.
+  const catRef = useRef<HTMLDivElement>(null);
+  const startBtnRef = useRef<HTMLButtonElement>(null);
   const reducedMotion = useSyncExternalStore(
     subscribeMotion,
     getMotionSnapshot,
@@ -148,6 +153,11 @@ export default function WelcomeGate() {
   const showVideo = !reducedMotion && !videoFailed;
   // Reduced-motion visitors start settled: still + panel, no video.
   const settled = phase === "settled" || reducedMotion;
+  // The settled scene pieces that only exist on the natural video
+  // path (matted final still + greeter cat): the video ended on its
+  // last frame and is neither faded out (skip/back) nor failed.
+  const showGreeter =
+    settled && settledVia === "video" && !videoFaded && !videoFailed;
 
   // Safety net: if `ended` never fires (stalled network, odd codec),
   // settle anyway so the panel — and the way in — always appears.
@@ -178,6 +188,102 @@ export default function WelcomeGate() {
       ?.querySelector<HTMLElement>("[data-gate-heading]")
       ?.focus();
   }, [screen, settled]);
+
+  // Tail-wag proximity system. While the greeter cat is mounted, ease
+  // its wag speed/amplitude (the --tail-dur / --tail-amp variables on
+  // the cat stack) toward a target driven by how close the pointer is
+  // to the Start button: far away the wag idles (1.35s, ±3.2°); at
+  // the button it is excited (0.5s, ±4.6°). Everything runs in refs
+  // and a requestAnimationFrame loop — pointermove only records
+  // coordinates, never setState — and the per-frame lerp (0.08) is
+  // the hysteresis: excitement builds and decays smoothly instead of
+  // snapping at a threshold. Devices without a hover-capable pointer
+  // get no pointer listener at all; there, focusing or pressing Start
+  // excites the cat directly (keyboard focus included) and
+  // blur/release calms it back down. Pressing Start unmounts Screen A
+  // as usual, which cleans the whole system up.
+  useEffect(() => {
+    if (!showGreeter || reducedMotion) return;
+    const cat = catRef.current;
+    const btn = startBtnRef.current;
+    if (!cat || !btn) return;
+
+    const IDLE = { dur: 1.35, amp: 3.2 };
+    const EXCITED = { dur: 0.5, amp: 4.6 };
+    const NEAR_PX = 60; // at or inside this distance: fully excited
+    const FAR_PX = 420; // at or beyond this distance: fully idle
+    const current = { ...IDLE };
+    const pointer = { x: 0, y: 0, seen: false };
+    let boost = false; // Start is focused or pressed (any device)
+    let raf = 0;
+
+    const hoverCapable = window.matchMedia("(hover: hover)").matches;
+    const onPointerMove = (e: PointerEvent) => {
+      pointer.x = e.clientX;
+      pointer.y = e.clientY;
+      pointer.seen = true;
+    };
+    const boostOn = () => {
+      boost = true;
+    };
+    const boostOff = () => {
+      boost = false;
+    };
+
+    if (hoverCapable) {
+      window.addEventListener("pointermove", onPointerMove, {
+        passive: true,
+      });
+    }
+    btn.addEventListener("focus", boostOn);
+    btn.addEventListener("blur", boostOff);
+    btn.addEventListener("pointerdown", boostOn);
+    btn.addEventListener("pointerup", boostOff);
+    btn.addEventListener("pointercancel", boostOff);
+
+    const tick = () => {
+      let target: { dur: number; amp: number } = IDLE;
+      if (boost) {
+        target = EXCITED;
+      } else if (hoverCapable && pointer.seen) {
+        // Distance from the pointer to the button's rect — 0 inside,
+        // otherwise the gap to the nearest edge — mapped through a
+        // smoothstep so excitement fades in across NEAR..FAR.
+        const rect = btn.getBoundingClientRect();
+        const dx = Math.max(rect.left - pointer.x, 0, pointer.x - rect.right);
+        const dy = Math.max(rect.top - pointer.y, 0, pointer.y - rect.bottom);
+        const d = Math.hypot(dx, dy);
+        if (d <= NEAR_PX) {
+          target = EXCITED;
+        } else if (d < FAR_PX) {
+          const x = (FAR_PX - d) / (FAR_PX - NEAR_PX);
+          const s = x * x * (3 - 2 * x);
+          target = {
+            dur: IDLE.dur + (EXCITED.dur - IDLE.dur) * s,
+            amp: IDLE.amp + (EXCITED.amp - IDLE.amp) * s,
+          };
+        }
+      }
+      current.dur += (target.dur - current.dur) * 0.08;
+      current.amp += (target.amp - current.amp) * 0.08;
+      cat.style.setProperty("--tail-dur", `${current.dur.toFixed(3)}s`);
+      cat.style.setProperty("--tail-amp", `${current.amp.toFixed(3)}deg`);
+      raf = window.requestAnimationFrame(tick);
+    };
+    raf = window.requestAnimationFrame(tick);
+
+    return () => {
+      window.cancelAnimationFrame(raf);
+      if (hoverCapable) {
+        window.removeEventListener("pointermove", onPointerMove);
+      }
+      btn.removeEventListener("focus", boostOn);
+      btn.removeEventListener("blur", boostOff);
+      btn.removeEventListener("pointerdown", boostOn);
+      btn.removeEventListener("pointerup", boostOff);
+      btn.removeEventListener("pointercancel", boostOff);
+    };
+  }, [showGreeter, reducedMotion]);
 
   if (gone) return null;
 
@@ -322,10 +428,7 @@ export default function WelcomeGate() {
                   background — no paper rectangle in any browser,
                   Safari included. Poster paths never render it: the
                   poster still is already transparent. */}
-              {settled &&
-                settledVia === "video" &&
-                !videoFaded &&
-                !videoFailed && <FinalStill />}
+              {showGreeter && <FinalStill />}
               {!settled && showVideo && (
                 <button
                   type="button"
@@ -340,29 +443,53 @@ export default function WelcomeGate() {
                   stage then shows the last frame (cat on top of the
                   globe), so this sitting cat joins the scene fully
                   inside the artwork's lower-left. Its paper is matted
-                  out of the asset itself, so it grounds into the page
-                  background instead of reading as a sticker. On every
-                  poster path the still already contains a sitting
-                  cat — no duplicate. It fades in with the welcome
-                  text and never overlaps it (it belongs to the
-                  artwork column). */}
-              {settled &&
-                settledVia === "video" &&
-                !videoFaded &&
-                !videoFailed && (
-                  // eslint-disable-next-line @next/next/no-img-element -- static decorative asset, same pattern as the other gate artwork
+                  out of the assets themselves, so it grounds into the
+                  page background instead of reading as a sticker. On
+                  every poster path the still already contains a
+                  sitting cat — no duplicate. It fades in with the
+                  welcome text and never overlaps it (it belongs to
+                  the artwork column). The cat is a two-layer stack
+                  of one 595×595 frame — tail curl below, tail-less
+                  body above — so the tail can wag around its root
+                  (see .gate-tail): idly on its own, faster and wider
+                  as the pointer nears the Start button (proximity
+                  effect above). */}
+              {showGreeter && (
+                <div
+                  ref={catRef}
+                  aria-hidden="true"
+                  style={
+                    {
+                      "--tail-dur": "1.35s",
+                      "--tail-amp": "3.2deg",
+                    } as CSSProperties
+                  }
+                  className="gate-panel-in pointer-events-none absolute bottom-1 left-1 z-10 aspect-square w-[100px] select-none sm:bottom-2 sm:left-2 sm:w-[120px] lg:bottom-3 lg:left-3 lg:w-[150px]"
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element -- static decorative asset, same pattern as the other gate artwork */}
                   <img
-                    src="/images/panel-cat.webp"
+                    src="/images/panel-cat-tail.webp"
                     alt=""
-                    width={480}
-                    height={480}
+                    width={595}
+                    height={595}
                     loading="eager"
                     decoding="async"
                     draggable={false}
-                    aria-hidden="true"
-                    className="gate-panel-in pointer-events-none absolute bottom-1 left-1 z-10 w-[100px] select-none sm:bottom-2 sm:left-2 sm:w-[120px] lg:bottom-3 lg:left-3 lg:w-[150px]"
+                    className="gate-tail absolute inset-0 h-full w-full"
                   />
-                )}
+                  {/* eslint-disable-next-line @next/next/no-img-element -- static decorative asset, same pattern as the other gate artwork */}
+                  <img
+                    src="/images/panel-cat-body.webp"
+                    alt=""
+                    width={595}
+                    height={595}
+                    loading="eager"
+                    decoding="async"
+                    draggable={false}
+                    className="absolute inset-0 h-full w-full"
+                  />
+                </div>
+              )}
             </div>
 
             {/* Welcome text — appears once the intro settles, as the
@@ -389,6 +516,7 @@ export default function WelcomeGate() {
                   {w.description}
                 </p>
                 <button
+                  ref={startBtnRef}
                   type="button"
                   onClick={() => setScreen("game")}
                   className="group mt-9 inline-flex items-center gap-2 rounded-full bg-charcoal px-8 py-3.5 text-[15px] font-semibold text-paper transition duration-300 hover:-translate-y-0.5 hover:bg-terracotta motion-reduce:hover:translate-y-0"

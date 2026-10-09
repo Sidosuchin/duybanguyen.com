@@ -224,12 +224,41 @@ html[data-welcome="locked"] body {
   mask-position: center;
 }
 
+/*
+ * Greeter cat tail wag. The greeter is a two-layer stack of the same
+ * 595×595 frame — the tail curl alone below, the tail-less body above
+ * — so the tail layer can rotate around its root (the transform
+ * origin is the tail's base in the artwork) without ever detaching
+ * from the body. Speed and amplitude are CSS variables that
+ * WelcomeGate eases toward proximity-driven targets (pointer near the
+ * Start button → faster, wider wag); the defaults are the idle wag.
+ */
+.gate-tail {
+  transform-origin: 26.05% 84.87%;
+  animation: gate-tail-wag var(--tail-dur, 1.35s) ease-in-out infinite
+    alternate;
+  will-change: transform;
+}
+
+@keyframes gate-tail-wag {
+  from {
+    transform: rotate(calc(var(--tail-amp, 3.2deg) * -1));
+  }
+  to {
+    transform: rotate(var(--tail-amp, 3.2deg));
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   /* No entrance motion — the poster still replaces the video entirely
      (WelcomeGate does not render it) and the panel is simply there,
      ready to use. */
   .gate-panel-in,
   .gate-screen-in {
+    animation: none;
+  }
+  /* The greeter cat sits still too — no tail wag. */
+  .gate-tail {
     animation: none;
   }
 }
