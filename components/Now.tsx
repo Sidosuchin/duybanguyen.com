@@ -26,7 +26,7 @@ export default function Now() {
           {nowBlocks.map((block, i) => (
             <Reveal key={block.id} delay={i * 80}>
               <article className="h-full rounded-xl border border-line bg-paper p-6 transition-colors hover:border-terracotta/40">
-                <p className="font-display text-sm font-extrabold text-terracotta">
+                <p className="font-display text-sm font-extrabold text-terracotta-deep dark:text-terracotta-light">
                   {String(i + 1).padStart(2, "0")}
                 </p>
                 <h3 className="mt-3 font-display text-lg font-bold leading-snug">

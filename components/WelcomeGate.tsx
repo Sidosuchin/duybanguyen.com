@@ -47,18 +47,51 @@ function getServerMotionSnapshot(): boolean {
   return false;
 }
 
+/*
+ * Session lock state, read the same way: the server snapshot is
+ * `false` (no gate media in any route's HTML), the client snapshot
+ * applies the exact predicate of the layout's pre-paint script —
+ * locked ⟺ the unlock flag is absent — and fails open identically:
+ * a storage error reads as unlocked, so no media ever mounts.
+ */
+function subscribeLock(callback: () => void): () => void {
+  const onStorage = (e: StorageEvent) => {
+    if (e.key === UNLOCK_KEY) callback();
+  };
+  window.addEventListener("storage", onStorage);
+  return () => window.removeEventListener("storage", onStorage);
+}
+
+function getLockSnapshot(): boolean {
+  try {
+    return window.sessionStorage.getItem(UNLOCK_KEY) !== "1";
+  } catch {
+    return false;
+  }
+}
+
+function getServerLockSnapshot(): boolean {
+  return false;
+}
+
 /**
  * Welcome gate — a playful first-visit-per-session overlay (welcome →
  * memory game → completion), NOT a login. Whether it is visible is
  * decided before first paint: the inline script in the root layout sets
  * `data-welcome="locked"` on <html> when this session has no unlock
  * flag, and CSS (globals.css `.welcome-gate`) shows the overlay only
- * while that attribute is present. This component therefore renders the
- * exact same DOM on the server and the client — no hydration mismatch,
- * no flash of the site — and React only manages the three screens and
- * dismissal. If sessionStorage is unavailable (private mode), the
- * script fails open: the attribute is never set and the gate never
- * appears. Unlocking simply stores the flag and removes the attribute;
+ * while that attribute is present. The gate shell renders the exact
+ * same DOM on the server and the client — no hydration mismatch, no
+ * flash of the site — and React manages the three screens and
+ * dismissal. The heavy media (poster, intro video, hero paintings)
+ * is the one deliberate exception: it is absent from the server
+ * render and mounts in the first client commit once the client
+ * snapshot confirms the same lock predicate the pre-paint script
+ * uses, so a visitor whose session is already unlocked never
+ * downloads ~1MB of gate media on any route. If sessionStorage is
+ * unavailable (private mode), the script fails open: the attribute
+ * is never set, the gate never appears and no media mounts.
+ * Unlocking simply stores the flag and removes the attribute;
  * there are no redirects — the visitor is already on the route they
  * asked for, on whichever page the gate was mounted over.
  *
@@ -97,6 +130,14 @@ export default function WelcomeGate() {
   const [overlayGone, setOverlayGone] = useState(false);
   // The video failed to load/play: drop it entirely, keep the still.
   const [videoFailed, setVideoFailed] = useState(false);
+  // Payload diet: whether this session is locked, confirmed on the
+  // client only (see the lock store above). While false, none of the
+  // gate's media (poster, intro video, hero paintings) is rendered.
+  const sessionLocked = useSyncExternalStore(
+    subscribeLock,
+    getLockSnapshot,
+    getServerLockSnapshot,
+  );
   const rootRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   // Greeter cat stack + the Start CTA — the two ends of the tail-wag
@@ -321,9 +362,10 @@ export default function WelcomeGate() {
       <div className="flex min-h-full items-center justify-center px-5 py-12 sm:px-8">
         {screen === "welcome" && (
           <div className="relative mx-auto w-full max-w-[1360px]">
-            {/* Hero painting — one unified scene, rendered beneath
-                everything from the start (no flash, no reflow when
-                the intro settles): a painted environment plate with
+            {/* Hero painting — one unified scene, mounted (with the
+                rest of the gate's media) only once the session lock
+                is confirmed on the client, then sitting beneath
+                everything: a painted environment plate with
                 the approved globe artwork composited in, its outer
                 band graded to the exact page cream, so it needs no
                 frame, mask or matte. <picture> picks the desktop
@@ -338,22 +380,24 @@ export default function WelcomeGate() {
                 settled ? "opacity-100" : "opacity-0"
               }`}
             >
-              <picture>
-                <source
-                  media="(min-width: 1024px)"
-                  srcSet="/images/hero-desktop.webp"
-                />
-                <img
-                  src="/images/hero-mobile.webp"
-                  alt=""
-                  width={1400}
-                  height={1400}
-                  loading="eager"
-                  decoding="async"
-                  draggable={false}
-                  className="absolute inset-0 h-full w-full object-cover select-none"
-                />
-              </picture>
+              {sessionLocked && (
+                <picture>
+                  <source
+                    media="(min-width: 1024px)"
+                    srcSet="/images/hero-desktop.webp"
+                  />
+                  <img
+                    src="/images/hero-mobile.webp"
+                    alt=""
+                    width={1400}
+                    height={1400}
+                    loading="eager"
+                    decoding="async"
+                    draggable={false}
+                    className="absolute inset-0 h-full w-full object-cover select-none"
+                  />
+                </picture>
+              )}
               {/* Greeter cat — mounted whenever the hero is settled,
                   on EVERY path (video, skip, error, reduced motion,
                   back-from-game): the same scene always greets the
@@ -513,14 +557,18 @@ export default function WelcomeGate() {
       </div>
 
       {/* Intro overlay — the orbit intro as its own layer above the
-          hero (which is already rendered beneath it): the poster
-          still with the silhouette-masked video on top and the Skip
+          hero painting. Mounted only for a confirmed locked session
+          (see sessionLocked): the poster still with the
+          silhouette-masked video on top and the Skip
           button, in the centered square stage the intro has always
           had. On settle it fades out over 500ms and then unmounts
           (see the overlayGone effect), dissolving into the hero.
           Reduced-motion visitors never see it; back-from-game lands
           on the hero directly because the overlay is long gone. */}
-      {screen === "welcome" && !reducedMotion && !overlayGone && (
+      {screen === "welcome" &&
+        sessionLocked &&
+        !reducedMotion &&
+        !overlayGone && (
         <div
           className={`absolute inset-0 z-10 flex items-center justify-center transition-opacity duration-500 motion-reduce:transition-none ${
             settled ? "pointer-events-none opacity-0" : "opacity-100"

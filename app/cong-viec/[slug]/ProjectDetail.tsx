@@ -19,7 +19,7 @@ function CaseBlock({
   return (
     <Reveal>
       <section aria-label={label} className="border-t border-line py-10">
-        <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-terracotta">
+        <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-terracotta-deep dark:text-terracotta-light">
           {label}
         </h2>
         <div className="mt-4 max-w-3xl text-base leading-relaxed sm:text-lg">

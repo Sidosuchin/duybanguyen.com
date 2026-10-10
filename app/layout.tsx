@@ -68,11 +68,14 @@ const personJsonLd = {
 };
 
 /**
- * Runs synchronously while the HTML is parsed — before first paint — so
- * a returning visitor with dark mode saved never sees a light flash.
- * Mirrors the "dbn-theme" key ThemeProvider reads after hydration.
+ * Runs synchronously while the HTML is parsed — before first paint.
+ * Two jobs: flag `js` on <html> so the reveal CSS only hides content
+ * when an IntersectionObserver will actually run to show it again
+ * (no-JS visitors see everything), and restore a saved dark theme so
+ * a returning visitor never sees a light flash. The theme part
+ * mirrors the "dbn-theme" key ThemeProvider reads after hydration.
  */
-const themeInitScript = `(function(){try{if(window.localStorage.getItem("dbn-theme")==="dark"){document.documentElement.classList.add("dark")}}catch(e){}})();`;
+const themeInitScript = `(function(){document.documentElement.classList.add("js");try{if(window.localStorage.getItem("dbn-theme")==="dark"){document.documentElement.classList.add("dark")}}catch(e){}})();`;
 
 /**
  * Same pre-paint pattern for the welcome gate: if this session has not

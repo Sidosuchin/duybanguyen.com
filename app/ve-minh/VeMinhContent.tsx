@@ -130,7 +130,7 @@ export default function VeMinhContent() {
                     key={block.id}
                     className="rounded-xl border border-line bg-cream-soft p-6"
                   >
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-terracotta">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-terracotta-deep dark:text-terracotta-light">
                       {pick(block.label, lang)}
                     </p>
                     <p className="mt-2 font-display text-lg font-bold leading-snug">

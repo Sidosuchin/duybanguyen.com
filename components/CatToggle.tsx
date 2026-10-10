@@ -10,10 +10,11 @@ import { useLanguage } from "./LanguageProvider";
  *
  * The artwork is a pair of painterly editorial illustrations
  * (public/images/cat-day.webp / cat-night.webp) — the same cat in both.
- * They are stacked in one box and crossfaded purely by the `.dark`
- * class on <html> (via the `dark:` variant), so the correct cat is on
- * screen from the first paint — no JS state, no flash, no size change.
- * Both files load eagerly: the toggle is persistent UI on every page.
+ * Both files stay mounted and stacked for the CSS crossfade; the
+ * ACTIVE theme's image loads eager at high priority, while the
+ * inactive one is lazy + low priority so it never competes with page
+ * content (the button is always in the viewport, so it still arrives
+ * promptly and the first toggle crossfades cleanly).
  *
  * z-40 keeps it above the page but below the sticky header (z-50),
  * whose mobile menu must stay on top. The footer carries extra bottom
@@ -43,8 +44,8 @@ export default function CatToggle() {
               alt=""
               width={512}
               height={512}
-              loading="eager"
-              fetchPriority="high"
+              loading={dark ? "lazy" : "eager"}
+              fetchPriority={dark ? "low" : "high"}
               decoding="async"
               draggable={false}
               className="h-full w-full object-cover select-none"
@@ -59,8 +60,8 @@ export default function CatToggle() {
               alt=""
               width={512}
               height={512}
-              loading="eager"
-              fetchPriority="high"
+              loading={dark ? "eager" : "lazy"}
+              fetchPriority={dark ? "high" : "low"}
               decoding="async"
               draggable={false}
               className="h-full w-full object-cover select-none"

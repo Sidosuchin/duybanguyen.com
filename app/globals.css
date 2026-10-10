@@ -87,8 +87,12 @@ section {
   border-radius: 6px;
 }
 
-/* Scroll reveal — subtle fade + slide up only */
-.reveal {
+/* Scroll reveal — subtle fade + slide up only. The hidden initial
+   state is scoped to `html.js` (set pre-paint by the inline script in
+   the root layout): without JS the class is never added and content
+   is simply visible — the IntersectionObserver in Reveal.tsx is the
+   only thing that ever needs the hidden state. */
+html.js .reveal {
   opacity: 0;
   transform: translateY(18px);
   transition:
@@ -97,7 +101,7 @@ section {
   will-change: opacity, transform;
 }
 
-.reveal-visible {
+html.js .reveal-visible {
   opacity: 1;
   transform: translateY(0);
 }
@@ -326,7 +330,7 @@ html[data-welcome="locked"] body {
   html {
     scroll-behavior: auto;
   }
-  .reveal {
+  html.js .reveal {
     opacity: 1;
     transform: none;
     transition: none;

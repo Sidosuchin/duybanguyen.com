@@ -68,7 +68,7 @@ export default function Navbar() {
                 aria-current={isActive(route.href) ? "page" : undefined}
                 className={`link-underline text-[15px] font-medium transition-colors ${
                   isActive(route.href)
-                    ? "text-terracotta"
+                    ? "text-terracotta-deep dark:text-terracotta-light"
                     : "text-charcoal/75 hover:text-charcoal"
                 }`}
               >

@@ -28,7 +28,7 @@ export default function NotesPreview() {
                   href={`/goc-cua-duy/${post.slug}`}
                   className="group block h-full rounded-xl border border-line bg-paper p-6 transition-colors hover:border-terracotta/50"
                 >
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-terracotta">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-terracotta-deep dark:text-terracotta-light">
                     {pick(categoryLabel(post.category), lang)}
                   </p>
                   <h3 className="mt-3 font-display text-xl font-bold leading-snug transition-colors group-hover:text-terracotta">
