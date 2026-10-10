@@ -333,7 +333,11 @@ export default function WelcomeGate() {
                 capped at 114vh with a 4/3 aspect. The painting itself
                 contains NO sitting cat — the live two-layer cat stack
                 below is registered over its lower-left. */}
-            <div className="relative mx-auto aspect-square w-[min(96vw,560px)] lg:aspect-[4/3] lg:w-[min(100%,114vh)]">
+            <div
+              className={`relative mx-auto aspect-square w-[min(96vw,560px)] transition-opacity duration-700 motion-reduce:transition-none lg:aspect-[4/3] lg:w-[min(100%,114vh)] ${
+                settled ? "opacity-100" : "opacity-0"
+              }`}
+            >
               <picture>
                 <source
                   media="(min-width: 1024px)"
