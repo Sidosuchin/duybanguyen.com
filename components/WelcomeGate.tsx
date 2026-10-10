@@ -167,12 +167,15 @@ export default function WelcomeGate() {
     return () => window.clearTimeout(id);
   }, [phase, reducedMotion]);
 
-  // Once settled, the intro overlay fades out over 500ms; unmount it
+  // Once settled, the intro overlay fades out over 350ms; unmount it
   // just after the fade so it leaves the hero fully interactive.
-  // Reduced-motion visitors never render the overlay at all.
+  // The hero plate's own fade-in is delayed (see its className), so
+  // the crossover passes through the gate's plain cream — the two
+  // scenes never blend into one frame. Reduced-motion visitors never
+  // render the overlay at all.
   useEffect(() => {
     if (!settled || reducedMotion) return;
-    const id = window.setTimeout(() => setOverlayGone(true), 550);
+    const id = window.setTimeout(() => setOverlayGone(true), 400);
     return () => window.clearTimeout(id);
   }, [settled, reducedMotion]);
 
@@ -376,7 +379,7 @@ export default function WelcomeGate() {
                 contains NO sitting cat — the live two-layer cat stack
                 below is registered over its lower-left. */}
             <div
-              className={`relative mx-auto aspect-square w-[min(96vw,560px)] transition-opacity duration-700 motion-reduce:transition-none lg:aspect-[4/3] lg:w-[min(100%,114vh)] ${
+              className={`relative mx-auto aspect-square w-[min(96vw,560px)] transition-opacity duration-[600ms] delay-[300ms] motion-reduce:transition-none lg:aspect-[4/3] lg:w-[min(100%,114vh)] ${
                 settled ? "opacity-100" : "opacity-0"
               }`}
             >
@@ -561,8 +564,11 @@ export default function WelcomeGate() {
           (see sessionLocked): the poster still with the
           silhouette-masked video on top and the Skip
           button, in the centered square stage the intro has always
-          had. On settle it fades out over 500ms and then unmounts
-          (see the overlayGone effect), dissolving into the hero.
+          had. On settle it fades out over 350ms and then unmounts
+          (see the overlayGone effect); the hero plate underneath
+          starts its own fade-in only as the overlay is nearly gone,
+          so the sequence dips through the gate's cream instead of
+          cross-blending the two scenes.
           Reduced-motion visitors never see it; back-from-game lands
           on the hero directly because the overlay is long gone. */}
       {screen === "welcome" &&
@@ -570,7 +576,7 @@ export default function WelcomeGate() {
         !reducedMotion &&
         !overlayGone && (
         <div
-          className={`absolute inset-0 z-10 flex items-center justify-center transition-opacity duration-500 motion-reduce:transition-none ${
+          className={`absolute inset-0 z-10 flex items-center justify-center transition-opacity duration-[350ms] motion-reduce:transition-none ${
             settled ? "pointer-events-none opacity-0" : "opacity-100"
           }`}
         >
