@@ -5,6 +5,7 @@ import PageHeader from "@/components/PageHeader";
 import Reveal from "@/components/Reveal";
 import SectionHeading from "@/components/SectionHeading";
 import ImagePanel from "@/components/ImagePanel";
+import EmptyMotif from "@/components/EmptyMotif";
 import { useLanguage } from "@/components/LanguageProvider";
 import { lifePhotos, lifeTopics } from "@/data/life";
 import { pick } from "@/lib/i18n";
@@ -80,6 +81,7 @@ export default function CuocSongContent() {
               <SectionHeading eyebrow={p.journalEyebrow} title={p.journalTitle} />
               <Reveal>
                 <div className="rounded-xl border border-line bg-cream-soft px-6 py-14 text-center">
+                  <EmptyMotif />
                   <p className="mx-auto max-w-md font-display text-xl font-bold leading-snug sm:text-2xl">
                     {t.sections.life.emptyText}
                   </p>

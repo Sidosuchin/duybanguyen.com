@@ -3,6 +3,7 @@
 import Link from "next/link";
 import Reveal from "./Reveal";
 import SectionHeading from "./SectionHeading";
+import EmptyMotif from "./EmptyMotif";
 import { useLanguage } from "./LanguageProvider";
 import { posts, categoryLabel } from "@/data/posts";
 import { pick } from "@/lib/i18n";
@@ -47,6 +48,7 @@ export default function NotesPreview() {
         ) : (
           <Reveal>
             <div className="rounded-xl border border-line bg-cream-soft px-6 py-12 text-center sm:py-16">
+              <EmptyMotif />
               <p className="mx-auto max-w-md font-display text-xl font-bold leading-snug sm:text-2xl">
                 {t.sections.notes.emptyText}
               </p>

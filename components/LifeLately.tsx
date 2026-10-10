@@ -5,6 +5,7 @@ import Image from "next/image";
 import Reveal from "./Reveal";
 import SectionHeading from "./SectionHeading";
 import ImagePanel from "./ImagePanel";
+import EmptyMotif from "./EmptyMotif";
 import { useLanguage } from "./LanguageProvider";
 import { lifePhotos, lifeTopics } from "@/data/life";
 import { pick } from "@/lib/i18n";
@@ -57,6 +58,7 @@ export default function LifeLately() {
         ) : (
           <Reveal>
             <div className="rounded-xl border border-line bg-paper px-6 py-12 text-center sm:py-16">
+              <EmptyMotif />
               <p className="mx-auto max-w-md font-display text-xl font-bold leading-snug sm:text-2xl">
                 {t.sections.life.emptyText}
               </p>

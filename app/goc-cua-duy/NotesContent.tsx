@@ -3,6 +3,7 @@
 import Link from "next/link";
 import PageHeader from "@/components/PageHeader";
 import Reveal from "@/components/Reveal";
+import EmptyMotif from "@/components/EmptyMotif";
 import { useLanguage } from "@/components/LanguageProvider";
 import { postCategories, posts, categoryLabel } from "@/data/posts";
 import { pick } from "@/lib/i18n";
@@ -65,6 +66,7 @@ export default function NotesContent() {
           ) : (
             <Reveal>
               <div className="rounded-xl border border-line bg-cream-soft px-6 py-14 text-center">
+                <EmptyMotif />
                 <p className="mx-auto max-w-md font-display text-xl font-bold leading-snug sm:text-2xl">
                   {t.sections.notes.emptyText}
                 </p>

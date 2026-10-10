@@ -5,6 +5,7 @@ import Image from "next/image";
 import PageHeader from "@/components/PageHeader";
 import Reveal from "@/components/Reveal";
 import ImagePanel from "@/components/ImagePanel";
+import EmptyMotif from "@/components/EmptyMotif";
 import { useLanguage } from "@/components/LanguageProvider";
 import { products, shopIntro, shopTeaserNote } from "@/data/products";
 import { pick } from "@/lib/i18n";
@@ -62,6 +63,7 @@ export default function ShopContent() {
           ) : (
             <Reveal>
               <div className="rounded-xl border border-line bg-cream-soft px-6 py-14 text-center">
+                <EmptyMotif />
                 <p className="mx-auto max-w-md font-display text-xl font-bold leading-snug sm:text-2xl">
                   {t.sections.shop.comingSoon}
                   <span className="text-terracotta">.</span>

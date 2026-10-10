@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import Reveal from "./Reveal";
 import { useLanguage } from "./LanguageProvider";
 import { site } from "@/data/site";
@@ -46,36 +47,24 @@ export default function Hero() {
 
         <Reveal delay={140}>
           {/*
-            Portrait area — typographic monogram treatment (no photo yet).
-            When Duy provides a real portrait, replace this panel's inner
-            content with the photo; the frame stays the same.
+            The arch frame carries the approved hero painting — the same
+            watercolor world as the welcome gate (hand-drawn globe, the
+            orange cat at its lower-left). The frame is portrait (4/5) at
+            every breakpoint, so the square mobile painting is the right
+            source: object-cover crops only its sides, and the position
+            keeps both the globe (upper center) and the sitting cat
+            (bottom-left) inside the visible window. The wider desktop
+            painting would lose more of both to the tall crop.
           */}
-          <div
-            role="img"
-            aria-label={t.hero.portraitAlt}
-            className="dot-grid relative mx-auto aspect-[4/5] w-full max-w-[440px] overflow-hidden rounded-t-[10rem] rounded-b-2xl border border-line bg-cream text-charcoal"
-          >
-            {/* terracotta sun accent */}
-            <div
-              aria-hidden="true"
-              className="absolute right-[13%] top-[15%] h-20 w-20 rounded-full bg-terracotta sm:h-24 sm:w-24"
-            />
-            {/* monogram */}
-            <div className="absolute inset-x-0 bottom-[16%] text-center">
-              <p
-                aria-hidden="true"
-                className="font-display text-[6.5rem] font-extrabold leading-none tracking-tight sm:text-[8rem]"
-              >
-                D<span className="text-terracotta">B</span>N
-              </p>
-              <p className="mt-4 text-[11px] font-semibold uppercase tracking-[0.3em] text-muted">
-                {t.hero.portraitCaption}
-              </p>
-            </div>
-            {/* baseline rule */}
-            <div
-              aria-hidden="true"
-              className="absolute inset-x-[12%] bottom-[9%] h-px bg-charcoal/20"
+          <div className="relative mx-auto aspect-[4/5] w-full max-w-[440px] overflow-hidden rounded-t-[10rem] rounded-b-2xl border border-line bg-cream">
+            <Image
+              src="/images/hero-mobile.webp"
+              alt={t.hero.heroArtAlt}
+              width={1400}
+              height={1400}
+              preload
+              sizes="(min-width: 1024px) 440px, min(92vw, 440px)"
+              className="h-full w-full object-cover object-[18%_center]"
             />
           </div>
         </Reveal>

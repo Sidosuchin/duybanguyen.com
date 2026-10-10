@@ -98,6 +98,8 @@ const vi = {
     ctaWork: "Xem công việc",
     portraitAlt:
       "Thiết kế typographic Duy Ba Nguyen — ảnh chân dung thật sẽ sớm được cập nhật tại đây",
+    heroArtAlt:
+      "Minh họa màu nước: chú mèo cam ngồi cạnh trái đất vẽ tay, xung quanh là sách, tách cà phê và những món đồ khám phá — thế giới của Duy",
     portraitCaption: "Living · Building · Exploring",
   },
   sections: {
@@ -342,6 +344,8 @@ const en: Dictionary = {
     ctaWork: "See my work",
     portraitAlt:
       "Duy Ba Nguyen typographic design — a real portrait photo will be added here soon",
+    heroArtAlt:
+      "Watercolor illustration: an orange cat sitting beside a hand-drawn globe, surrounded by books, a cup of coffee and explorer's objects — Duy's world",
     portraitCaption: "Living · Building · Exploring",
   },
   sections: {
