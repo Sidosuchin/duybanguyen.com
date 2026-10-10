@@ -58,13 +58,13 @@ export default function Hero() {
           */}
           <div className="relative mx-auto aspect-[4/5] w-full max-w-[440px] overflow-hidden rounded-t-[10rem] rounded-b-2xl border border-line bg-cream">
             <Image
-              src="/images/hero-mobile.webp"
+              src="/images/hero-home.webp"
               alt={t.hero.heroArtAlt}
               width={1400}
               height={1400}
               preload
               sizes="(min-width: 1024px) 440px, min(92vw, 440px)"
-              className="h-full w-full object-cover object-[18%_center]"
+              className="h-full w-full object-cover object-[0%_center]"
             />
           </div>
         </Reveal>
