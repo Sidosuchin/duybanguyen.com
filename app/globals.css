@@ -77,8 +77,11 @@ section {
     color 0.35s ease;
 }
 
-/* Visible, consistent keyboard focus */
-:where(a, button, input, [tabindex]):focus-visible {
+/* Visible, consistent keyboard focus. Gate headings are excluded:
+   they are never focus targets (the gate focuses its root instead),
+   and the terracotta ring on an auto-focused heading read as a
+   "border" around it. */
+:where(a, button, input, [tabindex]:not([data-gate-heading])):focus-visible {
   outline: 2px solid var(--color-terracotta);
   outline-offset: 3px;
   border-radius: 6px;
@@ -143,6 +146,21 @@ section {
  * JS at all) the gate stays hidden — the gate always fails open.
  */
 .welcome-gate {
+  /* Cream lock: the gate is one illustrated editorial world and
+     always renders its light palette, even when the page behind it
+     is in dark mode. Tailwind utilities resolve these custom
+     properties at the element, so re-declaring the light tokens on
+     the gate scopes them to everything inside it (welcome hero,
+     game, done screen, language switcher) while the site behind
+     keeps the visitor's chosen theme. */
+  --color-paper: #faf6f0;
+  --color-charcoal: #211d1a;
+  --color-panel: #fdfbf8;
+  --color-cream: #f1eadd;
+  --color-cream-soft: #f6f0e6;
+  --color-muted: #6f6a64;
+  --color-line: #e6ddd0;
+  color-scheme: light;
   opacity: 0;
   visibility: hidden;
   pointer-events: none;

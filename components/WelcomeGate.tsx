@@ -62,57 +62,23 @@ function getServerMotionSnapshot(): boolean {
  * there are no redirects — the visitor is already on the route they
  * asked for, on whichever page the gate was mounted over.
  *
- * Screen A is ONE integrated editorial scene, not two boxes: the
- * artwork's paper background has been matted out of the assets
- * themselves, so the poster still is genuinely transparent and sits
- * directly on the gate's page background, and the intro video is
- * clipped by a silhouette mask of its own animation — no framed
- * rectangle in any state. Once the intro settles (video end, skip,
- * failure, or the safety timeout) the welcome text fades in beside
- * it as a plain block floating on the same background — no stage
- * frame, no panel card. When the video ends naturally, a matted
- * still of its last frame crossfades over the video and a small
- * greeter cat joins the scene inside the artwork's lower-left; the
- * poster still already contains a sitting cat, so the greeter only
- * appears on the video path (tracked via `settledVia`).
+ * Screen A (v3) is ONE unified hero scene. A single hero painting
+ * (desktop or mobile variant, chosen by <picture>) is rendered
+ * beneath everything from the start — its outer band is graded to
+ * the exact page cream, so it needs no frame, mask or matte — and
+ * the intro plays as an overlay layer above it: the familiar poster
+ * still + silhouette-masked orbit video in a centered square stage.
+ * When the intro settles (video end, skip, failure, or the safety
+ * timeout) the overlay fades out and unmounts, revealing the hero:
+ * the welcome text over the painting's calm right zone (below it on
+ * mobile) and the two-layer greeter cat registered over the
+ * painting's lower-left, present on EVERY settled path (video,
+ * skip, error, reduced motion, back-from-game) — the painting
+ * itself carries no sitting cat, so the live layers are the only
+ * one. The gate also always renders its light editorial palette
+ * (see the cream-lock token scope on `.welcome-gate` in
+ * globals.css), whatever theme the page behind it uses.
  */
-/**
- * The intro video's last frame as a matted still (the cat standing on
- * top of the globe, paper genuinely transparent). On the natural
- * video path it crossfades in over the ended video: pixel-identical
- * artwork, but with no paper at all, so the settled scene has no
- * rectangle in any browser. Fades from opacity 0 on mount over
- * ~0.6s (double rAF so the transition reliably runs).
- */
-function FinalStill() {
-  const [shown, setShown] = useState(false);
-  useEffect(() => {
-    let raf2 = 0;
-    const raf1 = window.requestAnimationFrame(() => {
-      raf2 = window.requestAnimationFrame(() => setShown(true));
-    });
-    return () => {
-      window.cancelAnimationFrame(raf1);
-      window.cancelAnimationFrame(raf2);
-    };
-  }, []);
-  return (
-    // eslint-disable-next-line @next/next/no-img-element -- static settled-state asset, same pattern as the other gate artwork
-    <img
-      src="/images/cat-globe-final.webp"
-      alt=""
-      width={960}
-      height={960}
-      loading="eager"
-      decoding="async"
-      draggable={false}
-      aria-hidden="true"
-      className={`pointer-events-none absolute inset-0 h-full w-full object-cover transition-opacity duration-[600ms] motion-reduce:transition-none ${
-        shown ? "opacity-100" : "opacity-0"
-      }`}
-    />
-  );
-}
 
 export default function WelcomeGate() {
   const { t } = useLanguage();
@@ -126,16 +92,9 @@ export default function WelcomeGate() {
   // Crossfade the video out so the poster still shows instead — used
   // by Skip and when coming back from the game (never replay).
   const [videoFaded, setVideoFaded] = useState(false);
-  // How the intro settled: "video" = the video played through to its
-  // last frame (the cat on top of the globe is what the stage shows);
-  // "still" = settled onto the poster still (skip / error). The 7s
-  // fallback leaves this null until `ended` upgrades it, and reduced
-  // motion never sets it. Only "video" renders the extra greeter cat
-  // beside the artwork — the poster already contains a sitting cat,
-  // so showing another one there would duplicate it.
-  const [settledVia, setSettledVia] = useState<"video" | "still" | null>(
-    null,
-  );
+  // The intro overlay unmounts once its settle fade has finished, so
+  // it never lingers (invisible) above the hero intercepting clicks.
+  const [overlayGone, setOverlayGone] = useState(false);
   // The video failed to load/play: drop it entirely, keep the still.
   const [videoFailed, setVideoFailed] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -153,11 +112,11 @@ export default function WelcomeGate() {
   const showVideo = !reducedMotion && !videoFailed;
   // Reduced-motion visitors start settled: still + panel, no video.
   const settled = phase === "settled" || reducedMotion;
-  // The settled scene pieces that only exist on the natural video
-  // path (matted final still + greeter cat): the video ended on its
-  // last frame and is neither faded out (skip/back) nor failed.
-  const showGreeter =
-    settled && settledVia === "video" && !videoFaded && !videoFailed;
+  // The greeter cat stack is mounted whenever the settled hero is on
+  // screen (welcome screen only) — every settle path shows the same
+  // hero, so the proximity system below keys off this, not off how
+  // the intro happened to end.
+  const catMounted = settled && screen === "welcome";
 
   // Safety net: if `ended` never fires (stalled network, odd codec),
   // settle anyway so the panel — and the way in — always appears.
@@ -167,11 +126,23 @@ export default function WelcomeGate() {
     return () => window.clearTimeout(id);
   }, [phase, reducedMotion]);
 
-  // Move focus to the active screen's heading whenever the screen
-  // changes — but only while the gate is actually shown, so a returning
-  // (already unlocked) visitor's page is never disturbed. On Screen A
-  // the heading only exists once the intro settles; when it appears,
-  // focus it unless the visitor is already using the language switcher.
+  // Once settled, the intro overlay fades out over 500ms; unmount it
+  // just after the fade so it leaves the hero fully interactive.
+  // Reduced-motion visitors never render the overlay at all.
+  useEffect(() => {
+    if (!settled || reducedMotion) return;
+    const id = window.setTimeout(() => setOverlayGone(true), 550);
+    return () => window.clearTimeout(id);
+  }, [settled, reducedMotion]);
+
+  // Move focus to the gate root whenever the screen changes — but
+  // only while the gate is actually shown, so a returning (already
+  // unlocked) visitor's page is never disturbed. The root — never a
+  // heading — is the focus target: headings are not focusable
+  // anymore, because the auto-focused heading picked up the global
+  // :focus-visible terracotta ring, which read as a "border" drawn
+  // around it. Keep the existing exception: don't steal focus from a
+  // visitor who is already interacting (e.g. the language switcher).
   useEffect(() => {
     if (document.documentElement.getAttribute("data-welcome") !== "locked") {
       return;
@@ -184,14 +155,13 @@ export default function WelcomeGate() {
     ) {
       return;
     }
-    rootRef.current
-      ?.querySelector<HTMLElement>("[data-gate-heading]")
-      ?.focus();
+    rootRef.current?.focus({ preventScroll: true });
   }, [screen, settled]);
 
-  // Tail-wag proximity system. While the greeter cat is mounted, ease
-  // its wag speed/amplitude (the --tail-dur / --tail-amp variables on
-  // the cat stack) toward a target driven by how close the pointer is
+  // Tail-wag proximity system. While the greeter cat is mounted (the
+  // settled hero), ease its wag speed/amplitude (the --tail-dur /
+  // --tail-amp variables on the cat stack) toward a target driven by
+  // how close the pointer is
   // to the Start button: far away the wag idles (1.35s, ±3.2°); at
   // the button it is excited (0.5s, ±4.6°). Everything runs in refs
   // and a requestAnimationFrame loop — pointermove only records
@@ -203,7 +173,7 @@ export default function WelcomeGate() {
   // blur/release calms it back down. Pressing Start unmounts Screen A
   // as usual, which cleans the whole system up.
   useEffect(() => {
-    if (!showGreeter || reducedMotion) return;
+    if (!catMounted || reducedMotion) return;
     const cat = catRef.current;
     const btn = startBtnRef.current;
     if (!cat || !btn) return;
@@ -283,7 +253,7 @@ export default function WelcomeGate() {
       btn.removeEventListener("pointerup", boostOff);
       btn.removeEventListener("pointercancel", boostOff);
     };
-  }, [showGreeter, reducedMotion]);
+  }, [catMounted, reducedMotion]);
 
   if (gone) return null;
 
@@ -298,19 +268,17 @@ export default function WelcomeGate() {
     window.setTimeout(() => setGone(true), 400);
   };
 
-  /** Skip the intro: pause, crossfade to the poster still, settle. */
+  /** Skip the intro: pause the video and settle onto the hero. */
   const skipIntro = () => {
     videoRef.current?.pause();
     setVideoFaded(true);
-    setSettledVia("still");
     setPhase("settled");
   };
 
-  /** Back from the game: settled poster still — never replay the video. */
+  /** Back from the game: the settled hero — never replay the video. */
   const backToWelcome = () => {
     videoRef.current?.pause();
     setVideoFaded(true);
-    setSettledVia("still");
     setPhase("settled");
     setScreen("welcome");
   };
@@ -336,6 +304,7 @@ export default function WelcomeGate() {
   return (
     <div
       ref={rootRef}
+      tabIndex={-1}
       role="dialog"
       aria-modal="true"
       aria-label={w.dialogLabel}
@@ -343,118 +312,55 @@ export default function WelcomeGate() {
       className="welcome-gate fixed inset-0 z-[80] overflow-y-auto bg-paper text-charcoal"
     >
       {/* The VI|EN switcher stays reachable while the gate is up, so the
-          whole gate (like the rest of the site) switches instantly. */}
-      <div className="absolute top-4 right-4 z-10 sm:top-6 sm:right-6">
+          whole gate (like the rest of the site) switches instantly. It
+          sits above the intro overlay (z-10), hence z-20. */}
+      <div className="absolute top-4 right-4 z-20 sm:top-6 sm:right-6">
         <LanguageSwitcher />
       </div>
 
       <div className="flex min-h-full items-center justify-center px-5 py-12 sm:px-8">
         {screen === "welcome" && (
-          <div
-            className={`flex w-full flex-col items-center ${
-              settled
-                ? "lg:mx-auto lg:max-w-[1150px] lg:flex-row lg:items-center lg:gap-14"
-                : ""
-            }`}
-          >
-            {/* Intro stage — the artwork itself, unframed: the poster
-                still underneath (its paper matted out of the asset, so
-                it is genuinely transparent), the intro video layered
-                on top and clipped by .gate-video-mask — a silhouette
-                of the whole orbit animation — so the video's paper
-                never shows either. While the intro runs the artwork
-                sits centered on its own; once settled, desktop (≥lg)
-                reflows into the hero — artwork left (~54%), welcome
-                text right (~46%) — while mobile keeps a single column
-                with a compact artwork so the text and its CTA stay
-                close at hand. When the video ends naturally it stays
-                mounted underneath, holding its last frame, while a
-                matted still of that same frame crossfades over it and
-                the greeter cat fades in inside the artwork's
-                lower-left as part of the same scene. */}
-            <div
-              className={`relative aspect-square ${
-                settled
-                  ? "w-[min(78vw,340px)] lg:w-[54%] lg:max-w-[560px]"
-                  : "w-[min(88vw,520px)]"
-              }`}
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element -- static poster asset, same pattern as the other gate artwork */}
-              <img
-                src="/images/cat-globe-poster.webp"
-                alt=""
-                width={960}
-                height={960}
-                loading="eager"
-                decoding="async"
-                draggable={false}
-                className="absolute inset-0 h-full w-full object-cover select-none"
-              />
-              {showVideo && (
-                <video
-                  ref={(el) => {
-                    videoRef.current = el;
-                    // React's `muted` prop alone is not always applied
-                    // as the property autoplay policies check — set it
-                    // directly so the muted autoplay reliably starts.
-                    if (el) el.muted = true;
-                  }}
-                  src="/video/cat-orbit-intro.mp4"
-                  poster="/images/cat-globe-poster.webp"
-                  autoPlay
-                  muted
-                  playsInline
-                  preload="auto"
-                  aria-hidden="true"
-                  tabIndex={-1}
-                  onEnded={() => {
-                    setSettledVia("video");
-                    setPhase("settled");
-                  }}
-                  onError={() => {
-                    setVideoFailed(true);
-                    setSettledVia("still");
-                    setPhase("settled");
-                  }}
-                  className={`gate-video-mask absolute inset-0 h-full w-full object-cover transition-opacity duration-500 motion-reduce:transition-none ${
-                    videoFaded ? "opacity-0" : "opacity-100"
-                  }`}
+          <div className="relative mx-auto w-full max-w-[1360px]">
+            {/* Hero painting — one unified scene, rendered beneath
+                everything from the start (no flash, no reflow when
+                the intro settles): a painted environment plate with
+                the approved globe artwork composited in, its outer
+                band graded to the exact page cream, so it needs no
+                frame, mask or matte. <picture> picks the desktop
+                variant at lg; below that the square mobile painting
+                fills a min(96vw, 560px) box. The plate is sized so a
+                900px-tall desktop viewport shows it whole: width
+                capped at 114vh with a 4/3 aspect. The painting itself
+                contains NO sitting cat — the live two-layer cat stack
+                below is registered over its lower-left. */}
+            <div className="relative mx-auto aspect-square w-[min(96vw,560px)] lg:aspect-[4/3] lg:w-[min(100%,114vh)]">
+              <picture>
+                <source
+                  media="(min-width: 1024px)"
+                  srcSet="/images/hero-desktop.webp"
                 />
-              )}
-              {/* Settled still for the natural video path: a matted
-                  copy of the video's last frame crossfades over the
-                  ended video (which stays mounted underneath), so
-                  the final scene is pure illustration on the page
-                  background — no paper rectangle in any browser,
-                  Safari included. Poster paths never render it: the
-                  poster still is already transparent. */}
-              {showGreeter && <FinalStill />}
-              {!settled && showVideo && (
-                <button
-                  type="button"
-                  data-skip-intro
-                  onClick={skipIntro}
-                  className="absolute right-3 bottom-3 rounded-full border border-line bg-paper/90 px-3.5 py-1.5 text-xs font-medium text-charcoal shadow-[0_4px_14px_rgba(22,18,15,0.12)] backdrop-blur-sm transition-colors hover:bg-paper sm:right-4 sm:bottom-4"
-                >
-                  {w.skipIntro}
-                </button>
-              )}
-              {/* Greeter cat — only on the natural video path: the
-                  stage then shows the last frame (cat on top of the
-                  globe), so this sitting cat joins the scene fully
-                  inside the artwork's lower-left. Its paper is matted
-                  out of the assets themselves, so it grounds into the
-                  page background instead of reading as a sticker. On
-                  every poster path the still already contains a
-                  sitting cat — no duplicate. It fades in with the
-                  welcome text and never overlaps it (it belongs to
-                  the artwork column). The cat is a two-layer stack
-                  of one 595×595 frame — tail curl below, tail-less
-                  body above — so the tail can wag around its root
-                  (see .gate-tail): idly on its own, faster and wider
-                  as the pointer nears the Start button (proximity
-                  effect above). */}
-              {showGreeter && (
+                <img
+                  src="/images/hero-mobile.webp"
+                  alt=""
+                  width={1400}
+                  height={1400}
+                  loading="eager"
+                  decoding="async"
+                  draggable={false}
+                  className="absolute inset-0 h-full w-full object-cover select-none"
+                />
+              </picture>
+              {/* Greeter cat — mounted whenever the hero is settled,
+                  on EVERY path (video, skip, error, reduced motion,
+                  back-from-game): the same scene always greets the
+                  visitor. It is registered over the painting's
+                  lower-left (percentages of the plate, measured from
+                  the artwork) and is a two-layer stack of one 595×595
+                  frame — tail curl below, tail-less body above — so
+                  the tail can wag around its root (see .gate-tail):
+                  idly on its own, faster and wider as the pointer
+                  nears the Start button (proximity effect above). */}
+              {settled && (
                 <div
                   ref={catRef}
                   aria-hidden="true"
@@ -464,7 +370,7 @@ export default function WelcomeGate() {
                       "--tail-amp": "3.2deg",
                     } as CSSProperties
                   }
-                  className="gate-panel-in pointer-events-none absolute bottom-1 left-1 z-10 aspect-square w-[100px] select-none sm:bottom-2 sm:left-2 sm:w-[120px] lg:bottom-3 lg:left-3 lg:w-[150px]"
+                  className="gate-panel-in pointer-events-none absolute top-[51.54%] left-0 z-10 aspect-square w-[36.56%] select-none lg:top-[56.2%] lg:left-[-0.62%] lg:w-[29.16%]"
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element -- static decorative asset, same pattern as the other gate artwork */}
                   <img
@@ -492,50 +398,52 @@ export default function WelcomeGate() {
               )}
             </div>
 
-            {/* Welcome text — appears once the intro settles, as the
-                right column of the desktop hero (below the compact
-                artwork on mobile). It is a plain text block floating
-                directly on the gate's page background: no card, no
-                surface, no border, no shadow — the artwork and the
-                words share one canvas, one scene. Desktop left-aligns
-                it against the artwork; mobile centers it. The heading
-                carries no border or outline of any kind. */}
+            {/* Welcome text — appears once the intro settles. On
+                mobile it flows below the painting, centered; on
+                desktop it is absolutely placed over the painting's
+                calm right zone, vertically centered on the scene.
+                The entrance animation lives on an inner wrapper so
+                its keyframe transform never fights the desktop
+                -translate-y-1/2 centering on this block. The heading
+                is deliberately NOT focusable (see the focus effect):
+                it carries no border or outline of any kind. */}
             {settled && (
-              <div className="gate-panel-in relative mt-8 w-full max-w-[600px] text-center lg:mt-0 lg:w-[46%] lg:max-w-none lg:text-left">
-                <p className="text-xs font-semibold tracking-[0.24em] text-terracotta uppercase">
-                  {w.label}
-                </p>
-                <h2
-                  data-gate-heading
-                  tabIndex={-1}
-                  className="mt-4 font-display text-4xl font-bold tracking-tight outline-none sm:text-5xl"
-                >
-                  {w.heading}
-                </h2>
-                <p className="mx-auto mt-5 max-w-md text-base leading-relaxed text-muted sm:text-lg lg:mx-0">
-                  {w.description}
-                </p>
-                <button
-                  ref={startBtnRef}
-                  type="button"
-                  onClick={() => setScreen("game")}
-                  className="group mt-9 inline-flex items-center gap-2 rounded-full bg-charcoal px-8 py-3.5 text-[15px] font-semibold text-paper transition duration-300 hover:-translate-y-0.5 hover:bg-terracotta motion-reduce:hover:translate-y-0"
-                >
-                  {w.start}
-                  <svg
-                    aria-hidden="true"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1 motion-reduce:transition-none motion-reduce:group-hover:translate-x-0"
+              <div className="relative mx-auto mt-2 w-full max-w-[600px] text-center lg:absolute lg:top-1/2 lg:right-[4.5%] lg:mt-0 lg:w-[35%] lg:max-w-none lg:-translate-y-1/2 lg:text-left">
+                <div className="gate-panel-in">
+                  <p className="text-xs font-semibold tracking-[0.24em] text-terracotta uppercase">
+                    {w.label}
+                  </p>
+                  <h2
+                    data-gate-heading
+                    className="mt-4 font-display text-4xl font-bold tracking-tight outline-none sm:text-5xl lg:text-[56px] lg:leading-[1.05]"
                   >
-                    <path d="M4 12h16m-6-6 6 6-6 6" />
-                  </svg>
-                </button>
-                <p className="mt-5 text-sm text-muted">{w.supporting}</p>
+                    {w.heading}
+                  </h2>
+                  <p className="mx-auto mt-5 max-w-md text-base leading-relaxed text-muted sm:text-lg lg:mx-0">
+                    {w.description}
+                  </p>
+                  <button
+                    ref={startBtnRef}
+                    type="button"
+                    onClick={() => setScreen("game")}
+                    className="group mt-9 inline-flex items-center gap-2 rounded-full bg-charcoal px-8 py-3.5 text-[15px] font-semibold text-paper transition duration-300 hover:-translate-y-0.5 hover:bg-terracotta motion-reduce:hover:translate-y-0"
+                  >
+                    {w.start}
+                    <svg
+                      aria-hidden="true"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1 motion-reduce:transition-none motion-reduce:group-hover:translate-x-0"
+                    >
+                      <path d="M4 12h16m-6-6 6 6-6 6" />
+                    </svg>
+                  </button>
+                  <p className="mt-5 text-sm text-muted">{w.supporting}</p>
+                </div>
               </div>
             )}
           </div>
@@ -577,7 +485,6 @@ export default function WelcomeGate() {
             </p>
             <h2
               data-gate-heading
-              tabIndex={-1}
               className="mt-5 font-display text-4xl font-extrabold tracking-tight outline-none sm:text-5xl"
             >
               {w.doneTitle}
@@ -600,6 +507,75 @@ export default function WelcomeGate() {
           </div>
         )}
       </div>
+
+      {/* Intro overlay — the orbit intro as its own layer above the
+          hero (which is already rendered beneath it): the poster
+          still with the silhouette-masked video on top and the Skip
+          button, in the centered square stage the intro has always
+          had. On settle it fades out over 500ms and then unmounts
+          (see the overlayGone effect), dissolving into the hero.
+          Reduced-motion visitors never see it; back-from-game lands
+          on the hero directly because the overlay is long gone. */}
+      {screen === "welcome" && !reducedMotion && !overlayGone && (
+        <div
+          className={`absolute inset-0 z-10 flex items-center justify-center transition-opacity duration-500 motion-reduce:transition-none ${
+            settled ? "pointer-events-none opacity-0" : "opacity-100"
+          }`}
+        >
+          <div className="relative aspect-square w-[min(88vw,520px)]">
+            {/* eslint-disable-next-line @next/next/no-img-element -- static poster asset, same pattern as the other gate artwork */}
+            <img
+              src="/images/cat-globe-poster.webp"
+              alt=""
+              width={960}
+              height={960}
+              loading="eager"
+              decoding="async"
+              draggable={false}
+              className="absolute inset-0 h-full w-full object-cover select-none"
+            />
+            {showVideo && (
+              <video
+                ref={(el) => {
+                  videoRef.current = el;
+                  // React's `muted` prop alone is not always applied
+                  // as the property autoplay policies check — set it
+                  // directly so the muted autoplay reliably starts.
+                  if (el) el.muted = true;
+                }}
+                src="/video/cat-orbit-intro.mp4"
+                poster="/images/cat-globe-poster.webp"
+                autoPlay
+                muted
+                playsInline
+                preload="auto"
+                aria-hidden="true"
+                tabIndex={-1}
+                onEnded={() => {
+                  setPhase("settled");
+                }}
+                onError={() => {
+                  setVideoFailed(true);
+                  setPhase("settled");
+                }}
+                className={`gate-video-mask absolute inset-0 h-full w-full object-cover transition-opacity duration-500 motion-reduce:transition-none ${
+                  videoFaded ? "opacity-0" : "opacity-100"
+                }`}
+              />
+            )}
+            {!settled && showVideo && (
+              <button
+                type="button"
+                data-skip-intro
+                onClick={skipIntro}
+                className="absolute right-3 bottom-3 rounded-full border border-line bg-paper/90 px-3.5 py-1.5 text-xs font-medium text-charcoal shadow-[0_4px_14px_rgba(22,18,15,0.12)] backdrop-blur-sm transition-colors hover:bg-paper sm:right-4 sm:bottom-4"
+              >
+                {w.skipIntro}
+              </button>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Without JS the pre-paint script cannot run either, but keep the
           gate out of the way regardless — it must never trap a visitor. */}
