@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import Reveal from "./Reveal";
+import SectionHeading from "./SectionHeading";
 import ProjectRow from "./ProjectRow";
 import { useLanguage } from "./LanguageProvider";
 import { projects } from "@/data/projects";
@@ -13,17 +14,12 @@ export default function SelectedWork() {
   return (
     <section aria-label={t.sections.work.title} className="bg-night text-night-text">
       <div className="mx-auto max-w-[1240px] px-5 py-16 sm:px-8 sm:py-24">
-        <Reveal className="mb-10 sm:mb-14">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-terracotta-light">
-            {t.sections.work.eyebrow}
-          </p>
-          <h2 className="mt-3 font-display text-3xl font-bold tracking-tight sm:text-[2.6rem] sm:leading-[1.15]">
-            {t.sections.work.title}
-          </h2>
-          <p className="mt-4 max-w-2xl text-base leading-relaxed text-night-text/65 sm:text-lg">
-            {t.sections.work.description}
-          </p>
-        </Reveal>
+        <SectionHeading
+          tone="dark"
+          eyebrow={t.sections.work.eyebrow}
+          title={t.sections.work.title}
+          description={t.sections.work.description}
+        />
         <div className="border-t border-line-dark">
           {projects.map((project, i) => (
             <Reveal key={project.slug} delay={i * 60}>

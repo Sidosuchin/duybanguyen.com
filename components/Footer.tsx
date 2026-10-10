@@ -58,7 +58,7 @@ export default function Footer() {
             </p>
             <Link
               href="/lien-he"
-              className="mt-5 inline-block rounded-lg bg-terracotta px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-terracotta-deep"
+              className="mt-5 inline-flex min-h-[44px] items-center rounded-full bg-night-text px-6 py-2.5 text-sm font-semibold text-night transition-colors hover:bg-terracotta hover:text-night-text"
             >
               {t.footer.contactCta}
             </Link>

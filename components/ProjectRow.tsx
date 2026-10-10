@@ -41,7 +41,7 @@ export default function ProjectRow({
       <div className="pl-1 sm:pl-4">
         <div className="flex flex-wrap items-center gap-3">
           <span
-            className={`font-mono text-sm ${dark ? "text-fog" : "text-muted"}`}
+            className={`font-display text-sm ${dark ? "text-fog" : "text-muted"}`}
           >
             {String(index + 1).padStart(2, "0")}
           </span>

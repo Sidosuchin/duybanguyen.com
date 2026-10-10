@@ -30,7 +30,7 @@ export default function NotFound() {
       </p>
       <Link
         href="/"
-        className="mt-9 inline-block rounded-lg bg-charcoal px-7 py-3.5 text-[15px] font-semibold text-paper transition-colors hover:bg-terracotta"
+        className="mt-9 inline-block rounded-full bg-charcoal px-7 py-3.5 text-[15px] font-semibold text-paper transition-colors hover:bg-terracotta"
       >
         {t.notFound.cta}
       </Link>

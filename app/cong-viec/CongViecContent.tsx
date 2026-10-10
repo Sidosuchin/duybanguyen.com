@@ -17,8 +17,11 @@ export default function CongViecContent() {
         title={p.headerTitle}
         description={p.headerDescription}
       />
-      <section aria-label={p.headerTitle} className="border-t border-line">
-        <div className="mx-auto max-w-[1240px] px-5 pb-24 pt-4 sm:px-8">
+      <section aria-label={p.headerTitle}>
+        {/* Visually hidden H2 so the outline goes H1 (PageHeader) → H2 →
+            H3 (project rows), without changing the visible layout. */}
+        <h2 className="sr-only">{p.headerEyebrow}</h2>
+        <div className="mx-auto max-w-[1240px] px-5 py-16 sm:px-8 sm:py-24">
           <div className="border-t border-line">
             {projects.map((project, i) => (
               <Reveal key={project.slug} delay={i * 60}>

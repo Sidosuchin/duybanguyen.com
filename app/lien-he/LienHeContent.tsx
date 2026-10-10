@@ -23,7 +23,7 @@ export default function LienHeContent() {
       />
 
       <section aria-label={p.headerTitle} className="border-t border-line">
-        <div className="mx-auto max-w-[1240px] px-5 py-16 sm:px-8 sm:py-20">
+        <div className="mx-auto max-w-[1240px] px-5 py-16 sm:px-8 sm:py-24">
           <div className="grid gap-4 md:grid-cols-3">
             {contactPurposes.map((purpose, i) => (
               <Reveal key={i} delay={i * 80}>
@@ -42,7 +42,7 @@ export default function LienHeContent() {
       </section>
 
       <section aria-label={p.channelsTitle} className="bg-cream-soft">
-        <div className="mx-auto max-w-[1240px] px-5 py-16 sm:px-8 sm:py-20">
+        <div className="mx-auto max-w-[1240px] px-5 py-16 sm:px-8 sm:py-24">
           <SectionHeading eyebrow={p.channelsEyebrow} title={p.channelsTitle} />
           <Reveal>
             <SocialLinks />

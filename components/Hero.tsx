@@ -32,13 +32,13 @@ export default function Hero() {
           <div className="mt-10 flex flex-wrap gap-3">
             <Link
               href="/ve-minh"
-              className="rounded-lg bg-charcoal px-7 py-3.5 text-[15px] font-semibold text-paper transition-colors hover:bg-terracotta"
+              className="rounded-full bg-charcoal px-7 py-3.5 text-[15px] font-semibold text-paper transition-colors hover:bg-terracotta"
             >
               {t.hero.ctaAbout}
             </Link>
             <Link
               href="/cong-viec"
-              className="rounded-lg border border-charcoal/25 px-7 py-3.5 text-[15px] font-semibold transition-colors hover:border-terracotta hover:text-terracotta"
+              className="rounded-full border border-charcoal/25 px-7 py-3.5 text-[15px] font-semibold transition-colors hover:border-terracotta hover:text-terracotta"
             >
               {t.hero.ctaWork}
             </Link>

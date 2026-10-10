@@ -29,7 +29,7 @@ export default function ProductDetail({ product }: { product: Product }) {
         description={pick(product.description, lang)}
       />
       <section aria-label={product.name} className="border-t border-line">
-        <div className="mx-auto grid max-w-[1240px] gap-10 px-5 py-16 sm:px-8 sm:py-20 lg:grid-cols-2">
+        <div className="mx-auto grid max-w-[1240px] gap-10 px-5 py-16 sm:px-8 sm:py-24 lg:grid-cols-2">
           <Reveal>
             {product.image ? (
               <Image

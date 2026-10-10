@@ -82,7 +82,7 @@ export default function Navbar() {
           <LanguageSwitcher />
           <Link
             href="/lien-he"
-            className="hidden rounded-lg bg-terracotta px-4 py-2 text-[15px] font-semibold text-white transition-colors hover:bg-terracotta-deep sm:inline-block"
+            className="hidden min-h-[44px] items-center rounded-full bg-charcoal px-5 py-2.5 text-[15px] font-semibold text-paper transition-colors hover:bg-terracotta sm:inline-flex"
           >
             {t.nav.connect}
           </Link>
@@ -92,7 +92,7 @@ export default function Navbar() {
             aria-expanded={open}
             aria-controls="mobile-menu"
             aria-label={open ? t.a11y.closeMenu : t.a11y.openMenu}
-            className="flex h-10 w-10 items-center justify-center rounded-lg border border-line lg:hidden"
+            className="flex h-11 w-11 items-center justify-center rounded-lg border border-line lg:hidden"
           >
             <span aria-hidden="true" className="relative block h-4 w-5">
               <span
@@ -136,7 +136,7 @@ export default function Navbar() {
               <Link
                 href="/lien-he"
                 onClick={() => setOpen(false)}
-                className="block rounded-lg bg-terracotta px-4 py-3 text-center font-display text-xl font-bold text-white transition-colors hover:bg-terracotta-deep"
+                className="block rounded-full bg-charcoal px-4 py-3 text-center font-display text-xl font-bold text-paper transition-colors hover:bg-terracotta"
               >
                 {t.nav.connect}
               </Link>

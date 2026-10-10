@@ -40,7 +40,7 @@ export default function CuocSongContent() {
       </section>
 
       <section aria-label={p.journalTitle} className="border-t border-line">
-        <div className="mx-auto max-w-[1240px] px-5 py-16 sm:px-8 sm:py-20">
+        <div className="mx-auto max-w-[1240px] px-5 py-16 sm:px-8 sm:py-24">
           {lifePhotos.length > 0 ? (
             <div className="columns-2 gap-4 md:columns-3 [&>*]:mb-4">
               {lifePhotos.map((photo, i) => (

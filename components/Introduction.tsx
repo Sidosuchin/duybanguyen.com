@@ -14,10 +14,10 @@ export default function Introduction() {
       <div className="mx-auto max-w-[1240px] px-5 py-16 sm:px-8 sm:py-24">
         <div className="grid gap-8 lg:grid-cols-[1fr_1.7fr] lg:gap-16">
           <Reveal>
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-terracotta">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-terracotta-deep dark:text-terracotta-light">
               {t.sections.intro.eyebrow}
             </p>
-            <h2 className="mt-3 font-display text-3xl font-bold tracking-tight sm:text-[2.6rem] sm:leading-[1.15]">
+            <h2 className="mt-3 font-display text-3xl font-bold tracking-tight sm:text-4xl">
               {t.sections.intro.title}
             </h2>
           </Reveal>

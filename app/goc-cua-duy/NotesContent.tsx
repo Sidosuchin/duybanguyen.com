@@ -38,7 +38,7 @@ export default function NotesContent() {
       </section>
 
       <section aria-label={p.headerTitle} className="border-t border-line">
-        <div className="mx-auto max-w-[1240px] px-5 py-16 sm:px-8 sm:py-20">
+        <div className="mx-auto max-w-[1240px] px-5 py-16 sm:px-8 sm:py-24">
           {posts.length > 0 ? (
             <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
               {posts.map((post, i) => (

@@ -23,7 +23,7 @@ export default function ShopContent() {
       />
 
       <section aria-label={p.headerTitle} className="border-t border-line">
-        <div className="mx-auto max-w-[1240px] px-5 py-16 sm:px-8 sm:py-20">
+        <div className="mx-auto max-w-[1240px] px-5 py-16 sm:px-8 sm:py-24">
           {products.length > 0 ? (
             <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {products.map((product, i) => (

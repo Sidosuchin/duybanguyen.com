@@ -31,7 +31,7 @@ export default function SocialLinks({
               href={s.url}
               target={s.url.startsWith("http") ? "_blank" : undefined}
               rel={s.url.startsWith("http") ? "noopener noreferrer" : undefined}
-              className={`inline-block rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
+              className={`inline-flex min-h-[44px] items-center rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
                 dark
                   ? "border-line-dark text-night-text/85 hover:border-terracotta-light hover:text-terracotta-light"
                   : "border-line bg-paper hover:border-terracotta hover:text-terracotta"
@@ -43,11 +43,8 @@ export default function SocialLinks({
         ) : (
           <li key={s.label}>
             <span
-              aria-disabled="true"
-              className={`inline-block rounded-full border border-dashed px-4 py-2 text-sm ${
-                dark
-                  ? "border-line-dark text-fog"
-                  : "border-line text-muted"
+              className={`inline-block py-2 text-sm font-medium ${
+                dark ? "text-fog" : "text-muted"
               }`}
             >
               {s.label}
