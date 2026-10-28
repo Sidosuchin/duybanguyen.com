@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { navRoutes, site } from "@/data/site";
 import { useLanguage } from "./LanguageProvider";
 import LanguageSwitcher from "./LanguageSwitcher";
+import VelocityLogo from "./VelocityLogo";
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
@@ -56,8 +57,9 @@ export default function Navbar() {
           onClick={() => setOpen(false)}
           className="font-display text-lg font-extrabold tracking-tight"
         >
-          {site.name}
-          <span className="text-terracotta">.</span>
+          <VelocityLogo>
+            {site.name}
+          </VelocityLogo>
         </Link>
 
         <ul className="hidden items-center gap-7 lg:flex">
