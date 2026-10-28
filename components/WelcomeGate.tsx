@@ -362,7 +362,11 @@ export default function WelcomeGate() {
         <LanguageSwitcher />
       </div>
 
-      <div className="flex min-h-full items-center justify-center px-5 py-12 sm:px-8">
+      <div
+        className={`relative flex min-h-full items-center justify-center px-5 pt-12 sm:px-8 ${
+          screen === "game" ? "pb-20" : "pb-12"
+        }`}
+      >
         {screen === "welcome" && (
           <div className="relative mx-auto w-full max-w-[1360px]">
             {/* Hero painting — one unified scene, mounted (with the
@@ -512,6 +516,32 @@ export default function WelcomeGate() {
               onBack={backToWelcome}
             />
           </div>
+        )}
+
+        {/* Secret door — a tiny Jerry-style mousehole door tucked into
+            the bottom-right corner of the game screen: a quiet way past
+            the game straight into the site (the same enterSite flow as
+            the completion screen). It is anchored to this min-h-full
+            container rather than the viewport, so on a tall screen it
+            sits in the corner and on a short one it lands below the
+            replay row (the extra pb-20 above reserves its strip) —
+            never over the cards, Replay or VI|EN. No visible text; the
+            label is for assistive tech. Hover/focus sets it ajar (see
+            .secret-door in globals.css). */}
+        {screen === "game" && (
+          <button
+            type="button"
+            onClick={enterSite}
+            aria-label={w.secretDoor}
+            className="secret-door gate-screen-in absolute right-3 bottom-3 sm:right-5 sm:bottom-4"
+          >
+            <span aria-hidden="true" className="secret-door-frame">
+              <span className="secret-door-glow" />
+              <span className="secret-door-leaf">
+                <span className="secret-door-knob" />
+              </span>
+            </span>
+          </button>
         )}
 
         {screen === "done" && (
