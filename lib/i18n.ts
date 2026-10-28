@@ -86,6 +86,7 @@ const vi = {
     doneBody: "Sẵn sàng khám phá nhé.",
     doneMoves: "Bạn hoàn thành trong {moves} lượt lật.",
     enter: "Khám phá website",
+    secretDoor: "Cửa bí mật — bỏ qua trò chơi và vào thẳng website",
   },
   hero: {
     greeting: "Xin chào, mình là Duy.",
@@ -332,6 +333,7 @@ const en: Dictionary = {
     doneBody: "Ready to explore?",
     doneMoves: "You finished in {moves} moves.",
     enter: "Explore my website",
+    secretDoor: "Secret door — skip the game and go straight to the website",
   },
   hero: {
     greeting: "Hello, I'm Duy.",

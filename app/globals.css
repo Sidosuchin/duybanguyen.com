@@ -326,6 +326,102 @@ html[data-welcome="locked"] body {
   }
 }
 
+/*
+ * Secret door — the tiny Jerry-style mousehole door in the corner of
+ * the game screen (WelcomeGate). An arched doorway (terracotta-deep
+ * trim, warm dark interior with a lamp glow at the floor) holds a
+ * terracotta plank leaf hinged on its left edge; hover or keyboard
+ * focus swings the leaf ajar to show the light inside. The button is
+ * a 44×52 hit target around the 30×40 door so it stays easy to tap.
+ */
+.secret-door {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  width: 44px;
+  height: 52px;
+  padding-bottom: 6px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+/* The doorstep — a short cream sill the door stands on. */
+.secret-door::after {
+  content: "";
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+  width: 38px;
+  height: 3px;
+  border-radius: 2px;
+  background: #e2d5c2;
+  transform: translateX(-50%);
+}
+
+.secret-door-frame {
+  position: relative;
+  display: block;
+  width: 30px;
+  height: 40px;
+  border: 2.5px solid var(--color-terracotta-deep);
+  border-bottom: 0;
+  border-radius: 15px 15px 2px 2px;
+  background: #3b2519;
+  overflow: hidden;
+  perspective: 90px;
+  box-shadow: 0 3px 8px rgba(22, 18, 15, 0.14);
+}
+
+/* Lamp light inside — only really seen once the leaf swings open. */
+.secret-door-glow {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse 90% 70% at 40% 100%,
+    #f6c27a 0%,
+    rgba(232, 150, 80, 0.55) 45%,
+    transparent 80%
+  );
+}
+
+.secret-door-leaf {
+  position: absolute;
+  inset: 0;
+  border-radius: 12.5px 12.5px 0 0;
+  background:
+    repeating-linear-gradient(
+      90deg,
+      transparent 0 7px,
+      rgba(110, 44, 20, 0.35) 7px 8px
+    ),
+    var(--color-terracotta);
+  transform-origin: left center;
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.secret-door-knob {
+  position: absolute;
+  top: 55%;
+  right: 4px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--color-cream);
+  box-shadow: 0 0 0 0.5px rgba(110, 44, 20, 0.5);
+}
+
+.secret-door:hover .secret-door-leaf,
+.secret-door:focus-visible .secret-door-leaf {
+  transform: rotateY(-42deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Still opens on hover/focus, just without the swing. */
+  .secret-door-leaf {
+    transition: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
